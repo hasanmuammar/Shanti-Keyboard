@@ -31,6 +31,7 @@ struct KeyboardState {
     rows: Vec<Vec<Key>>,
     mode: Mode,
     total_units: f64,
+    dark_mode: bool,
 }
 
 impl KeyboardState {
@@ -161,10 +162,14 @@ impl KeyboardState {
                 total_units = row_units;
             }
         }
+        let dark_mode = gtk::Settings::default()
+            .map(|s| s.is_gtk_application_prefer_dark_theme())
+            .unwrap_or(false);
         Self {
             rows,
             mode: Mode::Normal,
             total_units,
+            dark_mode,
         }
     }
 
@@ -253,11 +258,34 @@ impl KeyboardWidget {
         keymap: &Rc<RefCell<BTreeMap<String, String>>>,
         state: &Rc<RefCell<KeyboardState>>,
     ) {
-        let state = state.borrow();
-        let keymap = keymap.borrow();
+    let state = state.borrow();
+    let keymap = keymap.borrow();
 
-        // Bezel fills the whole widget with rounded corners.
-        cr.set_source_rgb(0.227, 0.247, 0.278); // #3a3f47
+    // Theme-aware color palette, mirroring the Qt light.qss / dark.qss.
+    let (bezel, keycap, border, modifier_text, ascii_text, bangla_text,
+         alt_gr_highlight, alt_gr_highlight_text) = if state.dark_mode {
+        (
+            (0.12, 0.12, 0.14),   // dark bezel
+            (0.22, 0.24, 0.27),   #3a3f47-ish dark keycap
+            (0.45, 0.48, 0.51),   // dark border
+            (0.70, 0.73, 0.76),   // light modifier text
+            (0.60, 0.63, 0.66),   // light ASCII text
+            (0.55, 0.70, 0.90),   // light Bangla text
+            (0.086, 0.639, 0.580), // alt-gr highlight
+            (1.0, 1.0, 1.0),      // light highlight text
+        )
+    } else {
+        (
+            (0.227, 0.247, 0.278), // #3a3f47 light bezel
+            (0.961, 0.965, 0.969), // #f5f6f7 light keycap
+            (0.788, 0.800, 0.820), // #c9ccd1 light border
+            (0.353, 0.376, 0.412), // #5a6069 modifier text
+            (0.486, 0.510, 0.549), // #7c828c ASCII text
+            (0.106, 0.227, 0.557), // #1b3a8f Bangla text
+            (0.086, 0.639, 0.580), // #16a394 alt-gr highlight
+            (1.0, 1.0, 1.0),       // #ffffff highlight text
+        )
+    };
         cr.rectangle(0.0, 0.0, width, height);
         cr.fill();
 
@@ -292,16 +320,16 @@ impl KeyboardWidget {
 
                 // keycap
                 if highlight {
-                    cr.set_source_rgb(0.086, 0.639, 0.580); // #16a394
+                    cr.set_source_rgb(alt_gr_highlight.0, alt_gr_highlight.1, alt_gr_highlight.2);
                 } else {
-                    cr.set_source_rgb(0.961, 0.965, 0.969); // #f5f6f7
+                    cr.set_source_rgb(keycap.0, keycap.1, keycap.2);
                 }
                 let radius = f64::max(3.0, unit * 0.12);
                 cr.rectangle(cap_x, cap_y, cap_w, cap_h);
                 cr.fill();
 
                 // key border
-                cr.set_source_rgb(0.788, 0.800, 0.820); // #c9ccd1
+                cr.set_source_rgb(border.0, border.1, border.2);
                 cr.set_line_width(1.0);
                 cr.rectangle(cap_x, cap_y, cap_w, cap_h);
                 cr.stroke();
@@ -311,7 +339,7 @@ impl KeyboardWidget {
 
                 if key.key_bottom.is_none() && key.key_top.is_none() {
                     if let Some(ref label) = key.label {
-                        cr.set_source_rgb(0.353, 0.376, 0.412); // #5a6069
+                        cr.set_source_rgb(modifier_text.0, modifier_text.1, modifier_text.2);
                         cr.move_to(inner, inner_y);
                         cr.show_text(label);
                     }
@@ -320,7 +348,7 @@ impl KeyboardWidget {
                 }
 
                 // ASCII legends in a narrow left column
-                cr.set_source_rgb(0.486, 0.510, 0.549); // #7c828c
+                cr.set_source_rgb(ascii_text.0, ascii_text.1, ascii_text.2);
                 if let Some(ref top) = key.ascii_top {
                     cr.move_to(inner, inner_y);
                     cr.show_text(top);
@@ -331,7 +359,7 @@ impl KeyboardWidget {
                 }
 
                 // Bangla glyphs on the right band
-                cr.set_source_rgb(0.106, 0.227, 0.557); // #1b3a8f
+                cr.set_source_rgb(bangla_text.0, bangla_text.1, bangla_text.2);
                 let glyph_x = x + cell_w * 0.5;
                 let glyph_y = cap_y;
                 let glyph_h = cap_h;
