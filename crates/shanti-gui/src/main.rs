@@ -1,5 +1,6 @@
 mod keyboard;
 mod layout_viewer;
+mod settings_dialog;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -135,6 +136,13 @@ fn run() -> ExitCode {
         summary.set_wrap(true);
         summary.set_xalign(0.0);
 
+        let settings_button = Button::with_label("Settings");
+        settings_button.add_css_class("suggested-action");
+        settings_button.connect_clicked(move |_| {
+            let dialog = settings_dialog::SettingsDialog::new();
+            dialog.window().present();
+        });
+
         let view_layout = Button::with_label("View Layout");
         view_layout.add_css_class("suggested-action");
         view_layout.connect_clicked(move |_| {
@@ -157,6 +165,7 @@ fn run() -> ExitCode {
         body.append(&heading);
         body.append(&description);
         body.append(&summary);
+        body.append(&settings_button);
         body.append(&view_layout);
         content.append(&body);
 

@@ -751,6 +751,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "shanti-desktop"
+version = "0.1.0"
+
+[[package]]
 name = "shanti-gui-rust"
 version = "0.1.0"
 dependencies = [
@@ -758,6 +762,7 @@ dependencies = [
  "gtk4",
  "libadwaita",
  "shanti-config",
+ "shanti-desktop",
  "shanti-layout",
  "shanti-paths",
 ]

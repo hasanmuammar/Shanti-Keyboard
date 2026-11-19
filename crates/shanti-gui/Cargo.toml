@@ -17,3 +17,4 @@ gdk-pixbuf = { package = "gdk-pixbuf", version = "0.20.0" }
 shanti-paths = { path = "../shanti-paths" }
 shanti-config = { path = "../shanti-config" }
 shanti-layout = { path = "../shanti-layout" }
+shanti-desktop = { path = "../shanti-desktop" }
