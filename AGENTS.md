@@ -61,5 +61,6 @@ Pushing a `shanti-alpha.*` tag builds x86_64 and aarch64 IBus Flatpak bundles wi
 ## Conventions
 
 - Use concise imperative commit subjects.
+- Always commit and push the latest changes when wrapping up work in this repository.
 - Keep user-local installs under the user's home; do not write to system paths.
 - Do not commit build output, credentials or machine-specific configuration.
