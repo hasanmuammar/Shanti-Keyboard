@@ -1,13 +1,14 @@
 app-id: org.shanti.ShantiIbus
-runtime: org.kde.Platform
-runtime-version: '5.15-25.08'
-sdk: org.kde.Sdk
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 command: shanti-gui
 separate-locales: false
 
-# GNOME IBus engine Flatpak.
+# GNOME IBus engine Flatpak — switches to the GTK GUI on the GNOME runtime
+# once the GTK app passes package and real-session checks.
 finish-args:
   - --share=ipc
   - --socket=wayland
@@ -22,38 +23,49 @@ finish-args:
   - --filesystem=xdg-data/ibus/component:create
   - --filesystem=xdg-data/shanti-ibus:create
   - --filesystem=xdg-config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d:create
-  - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=org.freedesktop.systemd1
 
 modules:
   - name: shanti-keyboard
-    buildsystem: cmake-ninja
-    builddir: true
+    buildsystem: simple
     build-options:
       append-path: /usr/lib/sdk/rust-stable/bin
       build-args:
         - --share=network
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DCMAKE_INSTALL_PREFIX=/app
-      - -DBIN_DIR=/app/bin
-      - -DDATADIR=/app/share
-      - -DLIBEXECDIR=/app/libexec
-      - -DENABLE_IBUS=ON
+      env:
+        CARGO_TARGET_DIR: /run/build/shanti-keyboard/cargo-target
+    build-commands:
+      # Build the IBus engine via CMake (Qt-free, wraps shanti-core).
+      - mkdir -p /run/build/shanti-keyboard/cmake-build
+      - cd /run/build/shanti-keyboard/cmake-build
+      - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBIN_DIR=/app/bin -DDATADIR=/app/share -DLIBEXECDIR=/app/libexec -DENABLE_IBUS=ON -DBUILD_FRONTEND=OFF ..
+      - ninja
+      - ninja install
+      # Build the GTK GUI via cargo and install as `shanti-gui` (binary-name contract).
+      - SHANTI_VERSION="$(cat version.txt)" cargo build --locked --release --manifest-path crates/shanti-gui/Cargo.toml
+      - install -Dm755 /run/build/shanti-keyboard/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui
+      # Install runtime data files.
+      - install -d /app/share/shanti-keyboard/layouts /app/share/shanti-keyboard/data
+      - install -m644 data/avrophonetic.json data/Avro_Easy.json data/Borno.json data/Munir_Optima.json data/National_Jatiya.json data/Probhat.json data/UniBijoy.json data/khipro.json /app/share/shanti-keyboard/layouts/
+      - install -m644 src/engine/riti/data/autocorrect.json /app/share/shanti-keyboard/data/autocorrect.json
+      - install -m644 data/dictionary.json data/suffix.json data/regex.json /app/share/shanti-keyboard/data/
     post-install:
+      # Desktop entry: substitute @BIN_DIR@, rename to IBus app id, apply sed renames.
+      - sed -e 's#@BIN_DIR@#/app/bin#g' data/shanti-keyboard.desktop.in > /app/share/applications/shanti-keyboard.desktop
       - install -Dm644 /app/share/applications/shanti-keyboard.desktop /app/share/applications/org.shanti.ShantiIbus.desktop
       - sed -i 's/^Name=Shanti Keyboard$/Name=Shanti Keyboard (IBus)/; s/^Icon=shanti-keyboard$/Icon=org.shanti.ShantiIbus/' /app/share/applications/org.shanti.ShantiIbus.desktop
       - rm /app/share/applications/shanti-keyboard.desktop
-      - install -Dm644 /app/share/icons/hicolor/16x16/apps/shanti-keyboard.png /app/share/icons/hicolor/16x16/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/24x24/apps/shanti-keyboard.png /app/share/icons/hicolor/24x24/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/32x32/apps/shanti-keyboard.png /app/share/icons/hicolor/32x32/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/48x48/apps/shanti-keyboard.png /app/share/icons/hicolor/48x48/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/64x64/apps/shanti-keyboard.png /app/share/icons/hicolor/64x64/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/128x128/apps/shanti-keyboard.png /app/share/icons/hicolor/128x128/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/icons/hicolor/512x512/apps/shanti-keyboard.png /app/share/icons/hicolor/512x512/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 /app/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml /app/share/metainfo/org.shanti.ShantiIbus.metainfo.xml
-      - sed -i 's#<id>org.shanti.ShantiKeyboard</id>#<id>org.shanti.ShantiIbus</id>#; s#<name>Shanti Keyboard</name>#<name>Shanti Keyboard (IBus)</name>#; s#<icon type="remote"[^>]*>[^<]*</icon>#<icon type="stock">org.shanti.ShantiIbus</icon>#' /app/share/metainfo/org.shanti.ShantiIbus.metainfo.xml
-      - rm /app/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml
+      # Icons: install data/*.png as org.shanti.ShantiIbus.png in each hicolor size.
+      - install -Dm644 data/16.png /app/share/icons/hicolor/16x16/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/24.png /app/share/icons/hicolor/24x24/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/32.png /app/share/icons/hicolor/32x32/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/48.png /app/share/icons/hicolor/48x48/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/64.png /app/share/icons/hicolor/64x64/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/128.png /app/share/icons/hicolor/128x128/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/512.png /app/share/icons/hicolor/512x512/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 data/1024.png /app/share/icons/hicolor/1024x1024/apps/org.shanti.ShantiIbus.png || true
+      # Metainfo: substitute id/name/icon, rename to IBus app id.
+      - sed -e 's#<id>org.shanti.ShantiKeyboard</id>#<id>org.shanti.ShantiIbus</id>#' -e 's#<name>Shanti Keyboard</name>#<name>Shanti Keyboard (IBus)</name>#' -e 's#<icon type="remote"[^>]*>[^<]*</icon>#<icon type="stock">org.shanti.ShantiIbus</icon>#' data/org.shanti.ShantiKeyboard.metainfo.xml > /app/share/metainfo/org.shanti.ShantiIbus.metainfo.xml
     sources:
       - type: dir
         path: ../..
