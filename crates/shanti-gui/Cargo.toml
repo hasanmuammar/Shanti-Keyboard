@@ -1,0 +1,14 @@
+[package]
+name = "shanti-gui-rust"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+description = "Rust migration shell for the Shanti Keyboard desktop application."
+publish = false
+
+[[bin]]
+name = "shanti-gui-rust"
+path = "src/main.rs"
+
+[dependencies]
+shanti-paths = { path = "../shanti-paths" }

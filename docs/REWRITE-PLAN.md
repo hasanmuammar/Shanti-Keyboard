@@ -1,11 +1,23 @@
 # Shanti Rewrite Plan — Rust core, GTK4/libadwaita GUI
 
-**Status:** Adopted roadmap for future implementation. Not started; phases land incrementally and each phase must leave `develop` shippable.
-**Last reviewed:** 2026-10-22
-**Development branch:** `develop`
+**Status:** In progress on `rust-rewrite`; phases land incrementally and keep the GNOME/IBus branch shippable.
+**Last reviewed:** 2026-11-19
+**Development branch:** `rust-rewrite`
 **Related docs:** [Project Checklist](PROJECT-CHECKLIST.md) · [Development wiki](wiki/Development.md) · `.github/workflows/` CI contracts
 
-**Current development scope:** GNOME with IBus. Fcitx-specific code is maintained on the separate `fcitx-support` branch and is outside this branch’s build, CI and release scope.
+**Current development scope:** GNOME with IBus. Fcitx-specific implementation and workflows belong on `fcitx-support`; this branch builds and releases only the IBus Flatpak. The remaining Fcitx source files in this checkout are legacy carry-over and are not a target for new work here.
+
+## Implementation checklist
+
+- [x] Add a separate Rust CLI migration shell with `--version`, `--check-data`, and required-data validation. Keep the Qt `shanti-gui` as the production launcher.
+- [x] Configure a separate GNOME 51 Flatpak SDK build environment at `tools/flatpak/shanti-gtk-dev.yml` and build the Rust shell there.
+- [ ] Add a GTK4/libadwaita application shell and preserve the existing CLI behavior.
+- [ ] Port the settings and user-data model; verify compatibility with existing Shanti and migrated legacy settings.
+- [ ] Port desktop integration and setup/removal flows, preserving exact file paths and uninstall behavior.
+- [ ] Port dialogs and layout viewing; compare rendered layouts and autocorrect previews.
+- [ ] Prototype the floating top bar on GNOME Wayland and X11, including multi-monitor behavior.
+- [ ] Switch the IBus Flatpak to the GTK application after package and real-session checks pass.
+- [ ] Retire the Qt frontend and remaining active C++ IBus glue; retain the IBus install contracts.
 
 ---
 
@@ -14,13 +26,13 @@
 Rewrite the fork so that Bengali text processing, configuration, platform-glue logic, and the desktop GUI are all maintained in Rust with a modern GTK UI:
 
 1. **C++ → Rust:** Eliminate the C++ codebase (~10k lines: engine plugins, shared utilities, Qt frontend) in favor of Rust crates, building on the ~5.3k-line Rust foundation that already exists in `src/engine/riti/`.
-2. **Qt5 → GTK4/libadwaita:** Replace the Qt frontend (`openbangla-gui`) with a GTK4 + libadwaita application pinned to the newest GNOME runtime available on Flathub at implementation start.
+2. **Qt5 → GTK4/libadwaita:** Replace the Qt frontend (`shanti-gui`) with a GTK4 + libadwaita application pinned to the GNOME runtime selected at phase-3 kickoff.
 
 Non-negotiable invariants carried across the entire rewrite:
 
 - Linux-only scope (Windows/macOS upstream code stays deleted).
 - Portable, user-local installation model (`~/.local` targets, bundled install/uninstall scripts, exact uninstall allowlist paths).
-- User data compatibility: settings store location/format, custom layout discovery, autocorrect data, and the `~/.local/share/openbangla-keyboard` data layout — see §6 Compat Gates.
+- User data compatibility: settings store location/format, custom layout discovery, autocorrect data, and the `~/.local/share/shanti-keyboard` data layout — see §6 Compat Gates.
 - The GNOME IBus Flatpak builds on x86_64 and aarch64 with green CI and releases as provenance-attested `shanti-alpha.*` prereleases. Fcitx5 is outside this branch's scope.
 - Real-desktop Bengali typing validated for every engine-visible change (CI cannot prove this; see [Project Checklist §2](PROJECT-CHECKLIST.md)).
 
@@ -29,10 +41,10 @@ Non-negotiable invariants carried across the entire rewrite:
 | Component | Language | Size (2026-10) | Role |
 |---|---|---|---|
 | `src/engine/riti/` (git submodule) | Rust | ~5.3k lines | The real engine: phonetic algorithm, khipro parser, suggestions, keycodes, config model. Exposes a C API via cbindgen (`include/riti.h`). |
-| `src/engine/ibus/main.cpp` + `keycode.h` | C++ | ~545 lines | IBus engine executable (`ibus-engine-openbangla`). Thin glue: libibus preedit/lookup-table UTF-8 text calls, keysym→riti map, pushes the current settings into the session-start `riti_config_set_*` block. |
-| `src/engine/fcitx/openbangla.cpp` + `keycode.h` | C++ | ~690 lines | Fcitx5 addon module (`libopenbangla.so`). **Already Qt-free**: reads the same settings store (`$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf`) with Fcitx's own INI parser and `StandardPath` discovery. |
-| `src/frontend/` (main, TopBar, KeyboardWidget, SettingsDialog, About/AutoCorrect dialogs, LayoutViewer, FlatpakIbusIntegration, PlatformConfig, SingleInstance, AvroPhonetic, …) | C++/Qt5 | ~4.9k lines + 6 `.ui` files | `openbangla-gui`: floating top bar, settings, layout viewer, GNOME IBus registration panel (fork-specific), desktop-backend auto-setup. |
-| `src/shared/` (Settings, FileSystem, Log) | C++/Qt5 | ~500 lines | Settings store: **QSettings** (`QSettings("OpenBangla", "Keyboard")` → `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf`, INI format). Path- and user-dir discovery helpers. |
+| `src/engine/ibus/main.cpp` | C++ | current IBus shell | `ibus-engine-shanti`: libibus rendering and event glue around the Rust state machine in `crates/shanti-core`. |
+| `src/engine/fcitx/` | C++ | legacy carry-over | Out of scope for `rust-rewrite`; Fcitx work is maintained on `fcitx-support`. |
+| `src/frontend/` (main, TopBar, KeyboardWidget, SettingsDialog, About/AutoCorrect dialogs, LayoutViewer, FlatpakIbusIntegration, PlatformConfig, SingleInstance, AvroPhonetic, …) | C++/Qt5 | ~4.9k lines + 6 `.ui` files | `shanti-gui`: floating top bar, settings, layout viewer, GNOME IBus registration panel, and desktop integration. |
+| `src/shared/` (Settings, FileSystem, Log) | C++/Qt5 | ~500 lines | Legacy GUI settings/path helpers. The engines use `crates/shanti-config` and `crates/shanti-paths`; the active settings store is `$XDG_CONFIG_HOME/Shanti/Shanti.conf`. |
 | `src/platform/` | Rust | small | Platform support crate, cbindgen C header (committed). |
 | `data/`, `src/engine/riti/data/` | JSON | — | Layouts (v3 transliteration format), dictionary, suffix, regex, autocorrect. **Not rewritten.** |
 
@@ -40,18 +52,16 @@ Key consequences of these facts:
 
 - **The engines already are "Rust underneath".** The C++ in them is (a) the IM-platform API surface, (b) ~140-entry keysym translation tables, (c) settings plumbing. There is no hidden mass of business logic to port — it lives in `riti`.
 - **The real rewrite volume is the frontend.** ~4.9k lines of Qt, including widgets upstream redesigned in 2026 (PR #475) and fork-only panels (GNOME IBus integration, `PlatformConfig` auto-setup).
-- **Only the IBus engine links Qt today.** `src/engine/ibus/CMakeLists.txt` links `libShared Qt5::Core`; the Fcitx5 module is already Qt-free because it re-reads the settings file itself (fcitx `readFromIni`). Phase 1 therefore shrinks to de-Qt-ing the IBus engine — still valuable: one less duplicated settings parser.
+- **The GNOME/IBus engine is already Qt-free.** Phase 1 removed Qt from the IBus engine build; the remaining active Qt dependency is the GUI. Fcitx sources that remain in this checkout are legacy carry-over and are outside this branch's build and roadmap.
 - **Upstream merge compatibility decays with every phase.** The fork already manages three known upstream-merge conflict classes (Windows-engine deletions, frontend CMake source lists, SettingsDialog semantics); see §7 for the explicit divergence policy, which must be a conscious decision, not a drift.
 
 ## 3. Target architecture
 
 ```
-~/.local/share/openbangla-keyboard/            (unchanged user-data layout)
-├── layouts/                                   (unchanged JSON layouts)
-~/.local/share/openbangla-keyboard/            (unchanged user-data layout)
-├── layouts/                                   (unchanged JSON layouts)
-└── data/                                      (unchanged)
-~/.config/OpenBangla/Keyboard.conf             (settings store — QSettings "OpenBangla"/"Keyboard" INI; path unchanged)
+~/.local/share/shanti-keyboard/                (Shanti user-data layout)
+├── layouts/                                   (custom JSON layouts)
+└── data/                                      (user data)
+~/.config/Shanti/Shanti.conf                   (settings store — QSettings "Shanti"/"Shanti" INI; legacy OpenBangla settings are migrated)
 
 workspace (new top-level Rust workspace, once the submodule constrains us)
 ├── crates/shanti-config       — Rust port of shared/Settings: parses the QSettings INI store,
@@ -63,20 +73,14 @@ workspace (new top-level Rust workspace, once the submodule constrains us)
 ├── crates/shanti-core (or vendored riti) — engine core; ownership decision in §4
 ├── ibus-engine-shanti         — Rust engine via libibus (gir bindings) or an FFI core
 │                                behind the existing C++ wrapper; decided in phase 2
-├── fcitx5-shanti              — existing C++ addon shell; Rust integration deferred
-└── openbangla-gui             — GTK4/libadwaita app (gtk4-rs + libadwaita-rs)
+└── shanti-gui                  — GTK4/libadwaita app (gtk4-rs + libadwaita-rs)
 ```
 
-Build-system direction: pure Cargo for everything Rust; CMake remains for the IBus wrapper and existing Fcitx5 addon until their respective work completes. The `corrosion` glue disappears when the last C++ consumer goes — after the future Fcitx5 phase.
+Build-system direction: Cargo owns Rust crates; CMake remains for the IBus wrapper and Qt frontend during migration. Remove Corrosion when the final active C++ consumer leaves the IBus build. Fcitx build-system changes are outside this roadmap.
 
-## 4. Decision 0 — who owns the engine core (must be decided before phase 1)
+## 4. Engine ownership decision
 
-`riti` is an **upstream git submodule** pinned to `OpenBangla/riti` master. Every phase below assumes the Rust crates can evolve on the fork's schedule, so:
-
-- **Option A (recommended): own our riti.** Vendor riti into the workspace as `crates/shanti-core`, keep the license header chain, and treat upstream's riti as an occasional reference for algorithm fixes. Keep `include/riti.h`'s C API as a stable FFI boundary during phases 1–3; later phases may keep or retire that C API.
-- **Option B: stay on the upstream submodule.** This blocks schema evolution whenever riti's C API moves (upstream controls it) and limits the GUI rewrite to typed Rust access across a C ABI. Only viable if we accept upstream's feature cadence as ours.
-
-Record the choice — and the vendored commit hash — in the decision log (§9) when made.
+The current implementation keeps `src/engine/riti` as an upstream git submodule. `crates/shanti-core` depends on it directly, while fork-specific engine state and settings adaptation live in the Shanti crate. No vendoring decision is required for the GTK phase. Revisit ownership only if the fork needs to change riti internals or its API cadence blocks required work; record a vendoring hash if that decision changes.
 
 ## 5. Phases
 
@@ -84,20 +88,20 @@ Each phase has acceptance criteria (AC). Phases are sized so each can ship indep
 
 ### Phase 1 — Make settings Qt-free (engines first)
 
-The smallest Rust-first milestone with immediate payoff: the IBus engine stops linking Qt. *(Narrowed on 2026-10-22: inspection showed the Fcitx5 module is already Qt-free — it re-implements settings reading with Fcitx's own INI parser. Fcitx settings unification is deferred to its future phase.)*
+The first Rust-first milestone removed Qt from the IBus engine. *(Narrowed on 2026-10-22: Fcitx settings unification was deferred; Fcitx is now maintained on `fcitx-support`.)*
 
-**Status: complete on branch `rust-rewrite`.** Tasks:
+**Status: implemented on branch `rust-rewrite`.** Tasks:
 
 - [x] `crates/shanti-paths` — Rust port of the `FileSystem.cpp` Linux contract: XDG base-dir discovery, bundled-vs-user data-dir resolution (`linuxDataDirectory()` semantics), settings-file location, user-dir bootstrap; unit-tested.
-- [x] `crates/shanti-config` — read-only QSettings INI parser with typed getters matching the exact defaults in `src/shared/Settings.cpp`; unit-tested against a fixture generated by real Qt5.
+- [x] `crates/shanti-config` — read-only QSettings INI parser with typed getters matching the exact defaults in `src/shared/Settings.cpp`; unit-tested against a fixture generated by real Qt5 and used at `$XDG_CONFIG_HOME/Shanti/Shanti.conf`.
 - [x] Rewire `src/engine/ibus/main.cpp` off Qt (`QCoreApplication`, `QStandardPaths`, `QFileInfo`, `QString`/`QDir` → `std::filesystem` + the new crates' C ABI).
-- [x] CMake: root imports the crates via corrosion; IBus engine no longer links `libShared`/`Qt5::Core`; Fcitx5 module unchanged (already Qt-free).
+- [x] CMake: root imports the crates via corrosion; IBus engine no longer links `libShared`/`Qt5::Core`.
 - [x] package-test.yml: engine-binary Qt-free assertion (archive validation); CHANGELOG entry.
 - [x] Real-desktop Bengali typing check through IBus — confirmed by the maintainer on 2026-10-22 (IBus Flatpak works fine).
 
-**AC:** package-test gains a step proving `lddtree`/`ldd` of the portable archive's `ibus-engine-openbangla` contain **no Qt5 libraries**; `--check-data` and offscreen GUI checks stay green (GUI still builds with Qt); no regression in real-desktop Bengali typing.
+**AC:** package tests prove the IBus engine has no Qt5 dependency; `--check-data` and offscreen GUI checks stay green; no regression in real-desktop Bengali typing.
 
-### Phase 2 — IBus engine in Rust (current development)
+### Phase 2 — IBus engine in Rust (implemented; desktop matrix remains)
 
 Strangler-fig order: core first, wrapper stays until the port is proven.
 
@@ -125,7 +129,7 @@ Strangler-fig order: core first, wrapper stays until the port is proven.
 
 **AC:** the Rust engine passes on-device validation in GNOME and the existing IBus packaging remains valid. Fcitx5 parity and validation are outside this branch.
 
-### Phase 3 — GNOME GUI: Qt → GTK4/libadwaita
+### Phase 3 — GNOME GUI: Qt → GTK4/libadwaita (next implementation phase)
 
 The largest single phase (~4.9k lines). Ground rules:
 
@@ -134,6 +138,8 @@ The largest single phase (~4.9k lines). Ground rules:
 - The settings **file format** does not change; only the writer moves from QSettings to `shanti-config`.
 
 Port order (each row lands as its own milestone behind CI checks):
+
+The Rust CLI migration shell now covers version reporting and runtime-data checks under a separate `shanti-gui-rust` name. The next implementation milestone is a GTK4/libadwaita app shell; the production Qt `shanti-gui` stays in place until the replacement can launch and pass package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
 
 | Qt piece | GTK target | Notes & risks |
 |---|---|---|
@@ -162,16 +168,16 @@ Flatpak strategy: keep the existing Qt IBus Flatpak **green through this phase**
 
 ## 6. Compatibility gates (checked per phase, in package-test where possible)
 
-1. Settings store path + INI format unchanged: `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf` (QSettings `("OpenBangla", "Keyboard")` org/app store) — round-trip test with a fixture file written by the Qt app.
+1. Settings store path + INI format unchanged: `$XDG_CONFIG_HOME/Shanti/Shanti.conf` (QSettings `("Shanti", "Shanti")` org/app store) — legacy OpenBangla stores migrate through the existing path migration; fixture coverage remains required.
 2. User data/interfaces unchanged: custom-layout discovery, autocorrect data, dictionary behavior.
 3. IBus registration-file paths and desktop-integration contracts remain intact — the uninstall allowlist in `package-test.yml` must pass untouched.
-4. New binary names stay out of user-visible paths during the transition; final IBus renames happen only at phase 4, alongside the allowlist migration commit.
-5. CLI affordances preserved through the GUI rewrite: `openbangla-gui --version`, `--check-data`.
+4. Shanti binary names remain `shanti-gui` and `ibus-engine-shanti`; user-local install paths and the uninstall allowlist remain compatibility contracts.
+5. CLI affordances preserved through the GUI rewrite: `shanti-gui --version`, `--check-data`.
 6. No regression in the portable install model or archive layout.
 
 ## 7. Upstream divergence policy (explicit, decision-backed)
 
-Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/` (small conflict load; resolved by taking the Rust side). Phases 2–5 progressively make the fork unable to merge `upstream/develop` beyond:
+Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/` (small conflict load; resolved by taking the Rust side). Phases 2–4 progressively make the fork unable to merge `upstream/develop` beyond:
 
 - `data/*.json` layout/data updates (always mergeable),
 - upstream riti algorithm fixes (mergeable until Decision 0 vendoring; afterwards cherry-picked),
@@ -198,7 +204,7 @@ Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/
 | 2026-11-19 | Current rewrite scope set to GNOME/IBus; Fcitx-specific code and workflows moved to `fcitx-support` | Focus current implementation and desktop validation on GNOME. Keep Fcitx-specific code and workflows on `fcitx-support`; build and release the GNOME IBus Flatpak here. |
 | 2026-10-22 | Phase 1 started on branch `rust-rewrite`; narrowed to the IBus engine | Inspection showed the Fcitx5 module is already Qt-free (own INI reader). Decision 0 not required for phase 1: the new crates share no types with riti. |
 | 2026-10-22 | Keysym tables single-sourced in `crates/shanti-keysyms`; engines consume it over a hand-written C ABI header, not cbindgen | The C surface is one function (`shanti_keysyms_lookup`), far below cbindgen's threshold; hand-written headers match the phase-1 crate convention. Table verified 112/112 identical across the engines and against the real IBus and Fcitx enums (in-container probe); riti `VC_*` numbers resolved from the submodule header at build time so riti bumps need no regeneration. |
-| *(pending)* | Decision 0: vendor riti vs upstream submodule | Needed before phase 1 crates can share types with the core. |
+| 2026-10-22 | Keep riti as the upstream submodule for the current engine rewrite | `shanti-core` depends on the Rust crate directly and holds fork-specific state externally; revisit only if internal riti changes become necessary. |
 | 2026-10-22 | IBus binding strategy resolved to the **shrunken C++ wrapper**: engine logic moves into Rust behind a small C ABI; `main.cpp` shrinks to libibus plumbing. GIR/glib-rs (gir-generated) stays the documented alternative | Scouting verdict above: the used surface is introspectable, but gir-generation needs ownership-annotation surgery (`IBusText` ctors) plus CI generation tooling. The shrunken wrapper keeps all new risk in Rust logic, matches the strangler-fig plan default and the Fcitx5 model, and `main.cpp` is only ~550 lines — well below the effort threshold where hand-FFI stops being sensible. Revisit only if the GUI phase already produces a shared glib-rs layer that the engine could piggyback on. |
 | 2026-10-22 | Engine state machine extracted into `crates/shanti-core` (riti as direct Rust path dependency, not over its C header); IBus `main.cpp` renders core decisions, `keycode.h` deleted | The action-decision model (per-key `SHANTI_KEY_*` codes, logical selection owned by the core, commit text hand-off) keeps ibus call shapes recognisable while making the whole key→suggestion path unit-testable: 11 tests drive the real riti phonetic engine (sessions, backspace, AltGr, modifiers, selection, commit/pass-after), pinned to a parsed settings store so they never depend on the host's `Keyboard.conf`. `EnterKeyClosesPrevWin` semantics preserved exactly (key forwarded when the setting is off). The Fcitx5 addon can adopt the same core later. |
 | 2026-10-22 | **Fcitx5 addon (`openbangla.cpp`/`.h`) rewired onto shanti-core** — its duplicated riti settings mapping, keysym table and suggestion handling are gone; `keycode.h` deleted. Addon = Fcitx5 rendering of the shared core | Intentional cross-engine unifications (tested engines can't stay bit-identical while sharing one decision core): (1) candidate click commits the *pre-edit* text at the index — with ANSI enabled this is the Bijoy text — matching old Fcitx semantics; IBus previously committed the raw unicode candidate there and now matches Fcitx (arguably the correct behavior in ANSI mode). (2) Arrow/Tab navigation unified to the IBus semantics (Right/Left move when the window is horizontal, Up/Down when vertical, Tab always moves); old Fcitx committed in vertical mode for all of them and gated Tab behind horizontal — Fcitx vertical users gain working navigation. (3) The vestigial `database_dir` is validated against `engine_data_dir()/data` for both engines (riti reads its actual data via `include_bytes!`/user dir, so only the existence check differs). Old Fcitx-only bits: release events are signalled by `KeyEvent.isRelease()` and get the IBus release bit OR-ed in (Fcitx masks otherwise match IBus shift/ctrl/mod1); per-IC AltGr tracking became core-global; the old `context()` IC-switch was a dormant no-op (never seeded its tracker) — the new `syncInputContext()` actually seeds and resets, besides `reset()` which Fcitx already calls on focus changes. Fcitx keeps the timestamp-less `reloadConfig()` hook (config-dialog edits re-apply immediately). |
@@ -222,6 +228,6 @@ Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/
 | TODO-2: `Qt5::Svg` | `shanti-gui` | **Likely unnecessary** — the only SVG usage is `QIcon(":/images/*.svg")` for exe-embedded theme assets, served at runtime by Qt's `qsvgicon` icon-engine *plugin* (ships in `org.kde.Platform`), not by linking the module. Drop the link only after confirming the plugin is present in the bundle and on host distros (Kinoite). |
 | TODO-3: runtime `--share=network` | `fcitx-app.yml` finish-args | **Candidate to drop** (sandbox hardening) — copied from Flathub parity; neither the daemon (spell uses the vendored dict, enchant off) nor `shanti-gui` uses the network at runtime. Keep the build-time `--share=network` for the Rust fetch. |
 | Cosmetic: dead cleanup entries | `fcitx-app.yml` | Harmless no-ops copied from Flathub's recipe — rime paths (`/bin/rime_deployer`, `/bin/rime_patch`) for a component we never build. Tidy whenever the manifest is next touched for real. |
-| *(pending)* | GTK runtime + libadwaita pin (decided at phase 3 kickoff) | Newest stable GNOME runtime at start; no mid-phase switches. |
+| 2026-11-19 | Pin the GTK rewrite development environment to GNOME 51 | GNOME 51 is the stable runtime line at phase-3 kickoff; keep it separate from the production KDE runtime until the GTK app passes packaging and GNOME-session checks. |
 
 *Update this log — with a commit — every time a pending row is resolved.*

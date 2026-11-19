@@ -6,6 +6,29 @@ release bundles are named `shanti-ibus-x86_64.flatpak` for Intel/AMD and
 [GitHub Releases](https://github.com/hasanmuammar/Shanti-Keyboard/releases)
 page.
 
+## GTK rewrite development environment
+
+The GTK rewrite has a separate development manifest at
+`tools/flatpak/shanti-gtk-dev.yml`. It uses the GNOME 51 Platform and SDK,
+includes the Rust SDK extension, and checks that GTK4 and libadwaita are
+available inside the build SDK. It does not change the production IBus
+manifest or release runtime.
+
+Build the development app and run its CLI in the sandbox:
+
+```sh
+tools/flatpak/gtk-dev.sh build
+tools/flatpak/gtk-dev.sh version
+tools/flatpak/gtk-dev.sh check-data
+tools/flatpak/gtk-dev.sh shell
+```
+
+The Flatpak build state and build directory live together under
+`${XDG_CACHE_HOME:-$HOME/.cache}/shanti-keyboard/gtk-dev`, keeping them on the
+same filesystem as required by Flatpak Builder. The first build needs Flathub
+and its GNOME 51 runtime/SDK installed, plus network access to fetch any
+missing Flatpak sources.
+
 ---
 
 ## ShantiIbus — the IBus engine (for GNOME)

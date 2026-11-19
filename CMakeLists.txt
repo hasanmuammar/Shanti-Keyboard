@@ -27,6 +27,34 @@ endif()
 # as CMake targets so the engine can link them directly.
 add_subdirectory(crates)
 
+# Build the Rust migration shell alongside the existing Qt GUI when requested.
+# Keep it under a distinct name until its GTK interface is ready for the
+# production shanti-gui launcher.
+option(BUILD_RUST_GUI_SHELL "Build the Rust GUI migration shell" OFF)
+if(BUILD_RUST_GUI_SHELL)
+    find_program(CARGO_EXECUTABLE cargo REQUIRED)
+    set(RUST_GUI_TARGET_DIR "${CMAKE_BINARY_DIR}/rust-gui-target")
+    set(RUST_GUI_BINARY "${RUST_GUI_TARGET_DIR}/release/shanti-gui-rust")
+    add_custom_command(
+        OUTPUT "${RUST_GUI_BINARY}"
+        COMMAND ${CMAKE_COMMAND} -E env
+            "CARGO_TARGET_DIR=${RUST_GUI_TARGET_DIR}"
+            "SHANTI_VERSION=${PROJECT_VERSION}"
+            "${CARGO_EXECUTABLE}" build --release --manifest-path
+            "${CMAKE_SOURCE_DIR}/crates/shanti-gui/Cargo.toml"
+        DEPENDS
+            crates/shanti-gui/Cargo.toml
+            crates/shanti-gui/Cargo.lock
+            crates/shanti-gui/src/main.rs
+            crates/shanti-paths/Cargo.toml
+            crates/shanti-paths/src/lib.rs
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        VERBATIM
+    )
+    add_custom_target(shanti-gui-rust ALL DEPENDS "${RUST_GUI_BINARY}")
+    install(PROGRAMS "${RUST_GUI_BINARY}" DESTINATION "${BIN_DIR}")
+endif()
+
 if(BUILD_FRONTEND)
     message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
 endif()

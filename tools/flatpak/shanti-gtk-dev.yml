@@ -1,0 +1,39 @@
+app-id: org.shanti.ShantiGtkDev
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: shanti-gui-rust
+separate-locales: false
+
+# Development app used to build and run the GTK migration shell. This does not
+# replace the production IBus manifest, which remains on its current runtime
+# until the GTK application passes package and GNOME-session checks.
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-config/Shanti:create
+  - --filesystem=xdg-data/shanti-keyboard:create
+
+modules:
+  - name: shanti-gtk-dev
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_NET_OFFLINE: 'true'
+        CARGO_TARGET_DIR: /run/build/shanti-gtk-dev/cargo-target
+    build-commands:
+      - pkg-config --exists gtk4 libadwaita-1
+      - SHANTI_VERSION="$(cat version.txt)" cargo build --offline --release --manifest-path crates/shanti-gui/Cargo.toml
+      - install -Dm755 /run/build/shanti-gtk-dev/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui-rust
+      - install -d /app/share/shanti-keyboard/layouts /app/share/shanti-keyboard/data
+      - install -m644 data/avrophonetic.json data/Avro_Easy.json data/Borno.json data/Munir_Optima.json data/National_Jatiya.json data/Probhat.json data/UniBijoy.json data/khipro.json /app/share/shanti-keyboard/layouts/
+      - install -m644 src/engine/riti/data/autocorrect.json /app/share/shanti-keyboard/data/autocorrect.json
+      - install -m644 data/dictionary.json data/suffix.json data/regex.json /app/share/shanti-keyboard/data/
+    sources:
+      - type: dir
+        path: ../..
