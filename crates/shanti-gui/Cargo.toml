@@ -11,4 +11,6 @@ name = "shanti-gui-rust"
 path = "src/main.rs"
 
 [dependencies]
+adw = { package = "libadwaita", version = "0.8.0" }
+gtk = { package = "gtk4", version = "0.10.1" }
 shanti-paths = { path = "../shanti-paths" }

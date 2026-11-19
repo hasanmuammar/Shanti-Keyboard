@@ -11,7 +11,7 @@
 
 - [x] Add a separate Rust CLI migration shell with `--version`, `--check-data`, and required-data validation. Keep the Qt `shanti-gui` as the production launcher.
 - [x] Configure a separate GNOME 51 Flatpak SDK build environment at `tools/flatpak/shanti-gtk-dev.yml` and build the Rust shell there.
-- [ ] Add a GTK4/libadwaita application shell and preserve the existing CLI behavior.
+- [x] Add the first GTK4/libadwaita application shell and preserve `--version` / `--check-data` in the separate development binary. Compiles in the GNOME SDK; desktop presentation still needs a real session check.
 - [ ] Port the settings and user-data model; verify compatibility with existing Shanti and migrated legacy settings.
 - [ ] Port desktop integration and setup/removal flows, preserving exact file paths and uninstall behavior.
 - [ ] Port dialogs and layout viewing; compare rendered layouts and autocorrect previews.
@@ -139,7 +139,7 @@ The largest single phase (~4.9k lines). Ground rules:
 
 Port order (each row lands as its own milestone behind CI checks):
 
-The Rust CLI migration shell now covers version reporting and runtime-data checks under a separate `shanti-gui-rust` name. The next implementation milestone is a GTK4/libadwaita app shell; the production Qt `shanti-gui` stays in place until the replacement can launch and pass package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
+The Rust GTK shell now opens a basic Adwaita application window and preserves version reporting and runtime-data checks under the separate `shanti-gui-rust` name. The next milestone is the settings and user-data model; the production Qt `shanti-gui` stays in place until the replacement covers the required controls and passes package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
 
 | Qt piece | GTK target | Notes & risks |
 |---|---|---|

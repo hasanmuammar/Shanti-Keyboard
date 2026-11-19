@@ -1,6 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use adw::prelude::*;
+use adw::{Application, ApplicationWindow, HeaderBar};
+use gtk::{Box as GtkBox, Label, Orientation};
+
 const REQUIRED_FILES: &[&str] = &[
     "layouts/avrophonetic.json",
     "data/autocorrect.json",
@@ -75,8 +79,40 @@ fn run() -> ExitCode {
         };
     }
 
-    eprintln!("This Rust migration build contains the CLI shell only; the Qt GUI remains the active application.");
-    ExitCode::from(2)
+    let application = Application::builder()
+        .application_id("org.shanti.ShantiGtkDev")
+        .build();
+    application.connect_activate(|application| {
+        let content = GtkBox::new(Orientation::Vertical, 0);
+        content.append(&HeaderBar::new());
+
+        let body = GtkBox::new(Orientation::Vertical, 12);
+        body.set_margin_top(32);
+        body.set_margin_bottom(32);
+        body.set_margin_start(32);
+        body.set_margin_end(32);
+
+        let heading = Label::new(Some("Shanti Keyboard"));
+        heading.add_css_class("title-1");
+        let description = Label::new(Some(
+            "GTK application shell. Settings and keyboard controls are being migrated.",
+        ));
+        description.set_wrap(true);
+
+        body.append(&heading);
+        body.append(&description);
+        content.append(&body);
+
+        let window = ApplicationWindow::builder()
+            .application(application)
+            .title("Shanti Keyboard")
+            .default_width(560)
+            .default_height(360)
+            .content(&content)
+            .build();
+        window.present();
+    });
+    application.run().into()
 }
 
 fn main() -> ExitCode {

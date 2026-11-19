@@ -23,12 +23,19 @@ modules:
     buildsystem: simple
     build-options:
       append-path: /usr/lib/sdk/rust-stable/bin
+      build-args:
+        - --share=network
       env:
-        CARGO_NET_OFFLINE: 'true'
         CARGO_TARGET_DIR: /run/build/shanti-gtk-dev/cargo-target
     build-commands:
+      - rustc --version
+      - cargo --version
+      - pkg-config --modversion gtk4 libadwaita-1
       - pkg-config --exists gtk4 libadwaita-1
-      - SHANTI_VERSION="$(cat version.txt)" cargo build --offline --release --manifest-path crates/shanti-gui/Cargo.toml
+      - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
+      - cargo test --locked --manifest-path crates/shanti-gui/Cargo.toml
+      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml -- -D warnings
+      - SHANTI_VERSION="$(cat version.txt)" cargo build --locked --release --manifest-path crates/shanti-gui/Cargo.toml
       - install -Dm755 /run/build/shanti-gtk-dev/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui-rust
       - install -d /app/share/shanti-keyboard/layouts /app/share/shanti-keyboard/data
       - install -m644 data/avrophonetic.json data/Avro_Easy.json data/Borno.json data/Munir_Optima.json data/National_Jatiya.json data/Probhat.json data/UniBijoy.json data/khipro.json /app/share/shanti-keyboard/layouts/
