@@ -3,6 +3,7 @@ mod layout_viewer;
 mod settings_dialog;
 mod about_file;
 mod auto_correct_dialog;
+mod top_bar;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -184,6 +185,46 @@ fn run() -> ExitCode {
             .default_height(360)
             .content(&content)
             .build();
+
+        // Floating top bar (GTK port of Qt TopBar): frameless, always on top,
+        // draggable, with layout/settings/view-layout/quit actions.
+        let top_bar = top_bar::TopBar::new();
+        let root = shanti_paths::engine_data_dir();
+        let layout_path = root.join("layouts/avrophonetic.json");
+
+        let layout_text = std::fs::read_to_string(&layout_path).ok();
+
+        top_bar.view_btn.connect_clicked(move |_| {
+            let dialog = adw::Window::builder()
+                .title("Keyboard Layout Viewer")
+                .modal(true)
+                .default_width(700)
+                .default_height(500)
+                .build();
+            let viewer = layout_viewer::LayoutViewer::new();
+            if let Some(ref text) = layout_text {
+                viewer.set_layout(text);
+            }
+            let viewer_c = viewer.clone();
+            viewer.about_button().connect_clicked(move |_| {
+                if let Some(desc) = viewer_c.desc() {
+                    about_file::AboutFile::new(desc);
+                }
+            });
+            dialog.set_content(Some(&viewer.widget().clone()));
+            dialog.present();
+        });
+
+        top_bar.settings_btn.connect_clicked(move |_| {
+            let dialog = settings_dialog::SettingsDialog::new();
+            dialog.window().present();
+        });
+
+        top_bar.shutdown_btn.connect_clicked(move |_| {
+            application.quit();
+        });
+
+        top_bar.present();
         window.present();
     });
     application.run().into()
