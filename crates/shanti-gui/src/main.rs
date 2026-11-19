@@ -1,10 +1,16 @@
+mod keyboard;
+mod layout_viewer;
+
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use adw::prelude::*;
 use adw::{Application, ApplicationWindow, HeaderBar};
-use gtk::{Box as GtkBox, Label, Orientation};
+use gtk::{
+    gio, prelude::*, Box as GtkBox, Button, Label, Orientation,
+};
 use shanti_config::Settings;
+use shanti_paths;
 
 const REQUIRED_FILES: &[&str] = &[
     "layouts/avrophonetic.json",
@@ -15,7 +21,7 @@ const REQUIRED_FILES: &[&str] = &[
 ];
 
 fn print_help() {
-    println!("Shanti Keyboard\n\nUsage: shanti-gui-rust [OPTIONS]\n\nOptions:\n      --version     Print version information\n      --check-data  Check installed layouts and dictionary data\n  -h, --help        Print this help");
+    println!("Shanti Keyboard\n\nUsage: shanti-gui-rust [OPTIONS]\n\nOptions:\n      --version     Print version information\n      --check-data  Check installed layout and dictionary data\n  -h, --help        Print this help");
 }
 
 /// Human-readable snapshot of the typed store, shown in the shell until
@@ -129,9 +135,29 @@ fn run() -> ExitCode {
         summary.set_wrap(true);
         summary.set_xalign(0.0);
 
+        let view_layout = Button::with_label("View Layout");
+        view_layout.add_css_class("suggested-action");
+        view_layout.connect_clicked(move |_| {
+            let dialog = adw::Window::builder()
+                .title("Keyboard Layout Viewer")
+                .modal(true)
+                .default_width(700)
+                .default_height(500)
+                .build();
+            let viewer = layout_viewer::LayoutViewer::new();
+            let root = shanti_paths::engine_data_dir();
+            let layout_path = root.join("layouts/avrophonetic.json");
+            if let Ok(text) = std::fs::read_to_string(&layout_path) {
+                viewer.set_layout(&text);
+            }
+            dialog.set_content(Some(&viewer.widget().clone()));
+            dialog.present();
+        });
+
         body.append(&heading);
         body.append(&description);
         body.append(&summary);
+        body.append(&view_layout);
         content.append(&body);
 
         let window = ApplicationWindow::builder()

@@ -13,5 +13,7 @@ path = "src/main.rs"
 [dependencies]
 adw = { package = "libadwaita", version = "0.8.0" }
 gtk = { package = "gtk4", version = "0.10.1" }
+gdk-pixbuf = { package = "gdk-pixbuf", version = "0.20.0" }
 shanti-paths = { path = "../shanti-paths" }
 shanti-config = { path = "../shanti-config" }
+shanti-layout = { path = "../shanti-layout" }
