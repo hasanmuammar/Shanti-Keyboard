@@ -13,7 +13,7 @@
 - [x] Configure a separate GNOME 51 Flatpak SDK build environment at `tools/flatpak/shanti-gtk-dev.yml` and build the Rust shell there.
 - [x] Add the first GTK4/libadwaita application shell and preserve `--version` / `--check-data` in the separate development binary. Compiles in the GNOME SDK; desktop presentation still needs a real session check.
 - [x] Port the settings and user-data model; verify compatibility with existing Shanti and migrated legacy settings. The typed `shanti-config::Settings` model reads/writes the QSettings INI byte-format, and migration helpers are exercised by fixtures.
-- [ ] Port desktop integration and setup/removal flows, preserving exact file paths and uninstall behavior.
+- [x] Port desktop integration and setup/removal flows, preserving exact file paths and uninstall behavior. The new `shanti-desktop` crate reproduces the IBus component/launcher/systemd-drop-in contract files byte-for-byte against goldens captured from the real Qt 5.15 writer, and the install/remove flows run behind a `ServiceControl` seam; the uninstall allowlist and `tools/uninstall.sh` are untouched.
 - [ ] Port dialogs and layout viewing; compare rendered layouts and autocorrect previews.
 - [ ] Prototype the floating top bar on GNOME Wayland and X11, including multi-monitor behavior.
 - [ ] Switch the IBus Flatpak to the GTK application after package and real-session checks pass.
@@ -139,7 +139,7 @@ The largest single phase (~4.9k lines). Ground rules:
 
 Port order (each row lands as its own milestone behind CI checks):
 
-The Rust GTK shell opens a basic Adwaita application window, preserves version reporting and runtime-data checks under the separate `shanti-gui-rust` name, and now loads the typed `shanti-config::Settings` model (with first-run legacy migration) to display the active store. The next milestone is desktop integration and setup/removal flows; the production Qt `shanti-gui` stays in place until the replacement covers the required controls and passes package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
+The Rust GTK shell opens a basic Adwaita application window, preserves version reporting and runtime-data checks under the separate `shanti-gui-rust` name, and now loads the typed `shanti-config::Settings` model (with first-run legacy migration) to display the active store. Desktop integration and setup/removal flows are ported into `shanti-desktop` behind a `ServiceControl` seam, with contract-file bytes pinned by goldens captured from the real Qt writer. The next milestone is the settings/dialogs and layout viewer; the production Qt `shanti-gui` stays in place until the replacement covers the required controls and passes package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
 
 | Qt piece | GTK target | Notes & risks |
 |---|---|---|
