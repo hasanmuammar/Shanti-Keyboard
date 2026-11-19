@@ -1,7 +1,7 @@
 /*
- *  Shanti config — read-only reader for the Shanti Keyboard settings
- *  store shared with the Qt GUI (the pre-rebrand name was OpenBangla
- *  Keyboard; the file format is unchanged).
+ *  Shanti config — reader and writer for the Shanti Keyboard settings
+ *  store shared with the engines and the GTK GUI (the pre-rebrand name was
+ *  OpenBangla Keyboard; the file format is unchanged).
  *
  *  The store is an INI file written by QSettings("Shanti", "Shanti")
  *  (NativeFormat == IniFormat on Linux) at
@@ -26,14 +26,19 @@
  *  the first path component selects the section, the remaining components
  *  are joined with '\' to form the key, exactly as QSettings serializes it.
  *
- *  The writer stays in Qt (frontend) until the GUI rewrite (phase 4); this
- *  crate deliberately refuses to write so both formats can never diverge.
+ *  `Config` remains the low-level raw reader used by the C ABI; the typed
+ *  `Settings` model adds QSettings-compatible writing for the GTK app. The
+ *  C ABI stays read-only while the Qt frontend is still the production
+ *  writer, so the two writers cannot diverge during the transition.
  */
 
 use std::collections::HashMap;
 use std::ffi::{c_char, c_int, CString};
 use std::path::Path;
 use std::sync::RwLock;
+
+mod model;
+pub use model::Settings;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Config {
@@ -115,7 +120,9 @@ impl Config {
     /// values (the only kind the current keys hold) round-trip directly,
     /// but phase 4 must add full QSettings INI unescaping before writing.
     pub fn get_string(&self, qt_key: &str, dflt: &str) -> String {
-        self.raw(qt_key).cloned().unwrap_or_else(|| dflt.to_string())
+        self.raw(qt_key)
+            .cloned()
+            .unwrap_or_else(|| dflt.to_string())
     }
 }
 
@@ -166,11 +173,7 @@ unsafe fn from_cstr(ptr: *const c_char) -> Option<String> {
     if ptr.is_null() {
         None
     } else {
-        Some(
-            std::ffi::CStr::from_ptr(ptr)
-                .to_string_lossy()
-                .into_owned(),
-        )
+        Some(std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned())
     }
 }
 
@@ -199,17 +202,18 @@ pub extern "C" fn shanti_config_get_uint(key: *const c_char, dflt: u32) -> u32 {
 }
 
 #[no_mangle]
-pub extern "C" fn shanti_config_get_string(
-    key: *const c_char,
-    dflt: *const c_char,
-) -> *mut c_char {
+pub extern "C" fn shanti_config_get_string(key: *const c_char, dflt: *const c_char) -> *mut c_char {
     let guard = current();
     let config = guard.as_ref().and_then(|g| g.as_ref());
     // SAFETY: NUL-terminated C strings or null, per the header contract.
     let default_text = if dflt.is_null() {
         String::new()
     } else {
-        unsafe { std::ffi::CStr::from_ptr(dflt).to_string_lossy().into_owned() }
+        unsafe {
+            std::ffi::CStr::from_ptr(dflt)
+                .to_string_lossy()
+                .into_owned()
+        }
     };
     let parsed_key = unsafe { from_cstr(key) };
     let value = match config.zip(parsed_key) {

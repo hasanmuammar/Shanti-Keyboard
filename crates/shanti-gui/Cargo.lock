@@ -555,11 +555,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "shanti-config"
+version = "0.1.0"
+dependencies = [
+ "shanti-paths",
+]
+
+[[package]]
 name = "shanti-gui-rust"
 version = "0.1.0"
 dependencies = [
  "gtk4",
  "libadwaita",
+ "shanti-config",
  "shanti-paths",
 ]
 

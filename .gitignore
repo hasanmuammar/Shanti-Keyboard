@@ -147,6 +147,9 @@ fabric.properties
 
 target
 
+# Local plan-execution scratch
+.superpowers/
+
 *~
 *.DS_Store
 .*.swp

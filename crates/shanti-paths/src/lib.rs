@@ -19,6 +19,7 @@
  */
 
 use std::ffi::{c_char, CString};
+use std::io;
 use std::path::{Path, PathBuf};
 
 /// XDG base-dir resolution shared by both config and data roots.
@@ -44,11 +45,19 @@ fn env_value(key: &str) -> Option<String> {
 }
 
 pub fn config_dir() -> PathBuf {
-    base_dir(env_value("XDG_CONFIG_HOME").as_deref(), env_value("HOME").as_deref(), ".config")
+    base_dir(
+        env_value("XDG_CONFIG_HOME").as_deref(),
+        env_value("HOME").as_deref(),
+        ".config",
+    )
 }
 
 pub fn data_home() -> PathBuf {
-    base_dir(env_value("XDG_DATA_HOME").as_deref(), env_value("HOME").as_deref(), ".local/share")
+    base_dir(
+        env_value("XDG_DATA_HOME").as_deref(),
+        env_value("HOME").as_deref(),
+        ".local/share",
+    )
 }
 
 /// QStandardPaths::writableLocation(GenericDataLocation)-based user tree.
@@ -66,7 +75,11 @@ pub fn legacy_user_data_dir() -> PathBuf {
 /// Resolution mirrors linuxDataDirectory() in FileSystem.cpp.
 pub fn bundled_data_dir() -> Option<PathBuf> {
     let exe = std::fs::read_link("/proc/self/exe").ok()?;
-    let candidate = exe.parent()?.parent()?.join("share").join("shanti-keyboard");
+    let candidate = exe
+        .parent()?
+        .parent()?
+        .join("share")
+        .join("shanti-keyboard");
     if candidate.is_dir() {
         Some(candidate)
     } else {
@@ -114,28 +127,37 @@ fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Copy the legacy settings store to the active path, but never overwrite
+/// an existing active store. Returns whether a copy was made.
+pub fn migrate_settings_file(from: &Path, to: &Path) -> io::Result<bool> {
+    if !from.is_file() || to.exists() {
+        return Ok(false);
+    }
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::copy(from, to)?;
+    Ok(true)
+}
+
+/// Copy the legacy user-data tree to the active path, keeping existing
+/// files untouched. Returns whether a copy was made.
+pub fn migrate_data_dir(from: &Path, to: &Path) -> io::Result<bool> {
+    if !from.is_dir() || to.exists() {
+        return Ok(false);
+    }
+    copy_dir_all(from, to)?;
+    Ok(true)
+}
+
 /// One-time migration of the pre-rebrand locations: when the new user data
 /// tree / settings store is missing, copy the legacy ones to the new names.
 /// Legacy files are kept untouched (the uninstaller cleans both names).
 pub fn ensure_migration() {
-    let old_data = legacy_user_data_dir();
-    let new_data = user_data_dir();
-    let old_store = legacy_settings_file();
-    let new_store = settings_file();
-
-    if old_data.is_dir() && !new_data.exists() {
-        // Best effort: readers handle a partially missing tree gracefully
-        // (bundled data and defaults), so a failed copy is not fatal.
-        let _ = copy_dir_all(&old_data, &new_data);
-    }
-
-    if old_store.is_file() && !new_store.exists() {
-        if let Some(parent) = new_store.parent() {
-            if std::fs::create_dir_all(parent).is_ok() {
-                let _ = std::fs::copy(&old_store, &new_store);
-            }
-        }
-    }
+    // Best effort: readers handle a partially missing tree gracefully
+    // (bundled data and defaults), so a failed copy is not fatal.
+    let _ = migrate_data_dir(&legacy_user_data_dir(), &user_data_dir());
+    let _ = migrate_settings_file(&legacy_settings_file(), &settings_file());
 }
 
 /// Create the user data directories the GUI used to create via UserFolders
@@ -261,5 +283,58 @@ mod tests {
             legacy_settings_file(),
             config_dir().join("OpenBangla").join("Keyboard.conf")
         );
+    }
+
+    #[test]
+    fn migrate_settings_file_copies_once_and_never_overwrites() {
+        let root =
+            std::env::temp_dir().join(format!("shanti-paths-settings-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let old = root.join("OpenBangla").join("Keyboard.conf");
+        let new = root.join("Shanti").join("Shanti.conf");
+        std::fs::create_dir_all(old.parent().unwrap()).unwrap();
+        std::fs::write(&old, "[settings]\nANSI=true\n").unwrap();
+
+        assert!(migrate_settings_file(&old, &new).unwrap());
+        assert_eq!(
+            std::fs::read_to_string(&new).unwrap(),
+            "[settings]\nANSI=true\n"
+        );
+
+        std::fs::write(&new, "CHANGED").unwrap();
+        assert!(!migrate_settings_file(&old, &new).unwrap());
+        assert_eq!(std::fs::read_to_string(&new).unwrap(), "CHANGED");
+        assert!(!migrate_settings_file(&root.join("missing.conf"), &new).unwrap());
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn migrate_data_dir_copies_tree_and_keeps_existing_files() {
+        let root = std::env::temp_dir().join(format!("shanti-paths-data-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let old = root.join("openbangla-keyboard");
+        let new = root.join("shanti-keyboard");
+        std::fs::create_dir_all(old.join("layouts")).unwrap();
+        std::fs::create_dir_all(old.join("data")).unwrap();
+        std::fs::write(old.join("layouts/custom.json"), "custom").unwrap();
+        std::fs::write(old.join("data/autocorrect.json"), "auto").unwrap();
+
+        assert!(migrate_data_dir(&old, &new).unwrap());
+        assert_eq!(
+            std::fs::read_to_string(new.join("layouts/custom.json")).unwrap(),
+            "custom"
+        );
+        assert_eq!(
+            std::fs::read_to_string(new.join("data/autocorrect.json")).unwrap(),
+            "auto"
+        );
+
+        std::fs::write(new.join("layouts/custom.json"), "EDITED").unwrap();
+        assert!(!migrate_data_dir(&old, &new).unwrap());
+        assert_eq!(
+            std::fs::read_to_string(new.join("layouts/custom.json")).unwrap(),
+            "EDITED"
+        );
+        std::fs::remove_dir_all(&root).unwrap();
     }
 }

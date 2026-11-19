@@ -12,7 +12,7 @@
 - [x] Add a separate Rust CLI migration shell with `--version`, `--check-data`, and required-data validation. Keep the Qt `shanti-gui` as the production launcher.
 - [x] Configure a separate GNOME 51 Flatpak SDK build environment at `tools/flatpak/shanti-gtk-dev.yml` and build the Rust shell there.
 - [x] Add the first GTK4/libadwaita application shell and preserve `--version` / `--check-data` in the separate development binary. Compiles in the GNOME SDK; desktop presentation still needs a real session check.
-- [ ] Port the settings and user-data model; verify compatibility with existing Shanti and migrated legacy settings.
+- [x] Port the settings and user-data model; verify compatibility with existing Shanti and migrated legacy settings. The typed `shanti-config::Settings` model reads/writes the QSettings INI byte-format, and migration helpers are exercised by fixtures.
 - [ ] Port desktop integration and setup/removal flows, preserving exact file paths and uninstall behavior.
 - [ ] Port dialogs and layout viewing; compare rendered layouts and autocorrect previews.
 - [ ] Prototype the floating top bar on GNOME Wayland and X11, including multi-monitor behavior.
@@ -139,7 +139,7 @@ The largest single phase (~4.9k lines). Ground rules:
 
 Port order (each row lands as its own milestone behind CI checks):
 
-The Rust GTK shell now opens a basic Adwaita application window and preserves version reporting and runtime-data checks under the separate `shanti-gui-rust` name. The next milestone is the settings and user-data model; the production Qt `shanti-gui` stays in place until the replacement covers the required controls and passes package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
+The Rust GTK shell opens a basic Adwaita application window, preserves version reporting and runtime-data checks under the separate `shanti-gui-rust` name, and now loads the typed `shanti-config::Settings` model (with first-run legacy migration) to display the active store. The next milestone is desktop integration and setup/removal flows; the production Qt `shanti-gui` stays in place until the replacement covers the required controls and passes package checks. The `rust-anything` analyzer was run on 2026-11-19 but misclassified this C++ repository as C: it returned header-only candidates, 20 parse errors, and no `start_here` units. Its generated behavior-recording workflow is not applicable to these C++ units; preserve behavior with focused fixtures and end-to-end package checks as each replacement lands.
 
 | Qt piece | GTK target | Notes & risks |
 |---|---|---|
@@ -229,5 +229,6 @@ Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/
 | TODO-3: runtime `--share=network` | `fcitx-app.yml` finish-args | **Candidate to drop** (sandbox hardening) — copied from Flathub parity; neither the daemon (spell uses the vendored dict, enchant off) nor `shanti-gui` uses the network at runtime. Keep the build-time `--share=network` for the Rust fetch. |
 | Cosmetic: dead cleanup entries | `fcitx-app.yml` | Harmless no-ops copied from Flathub's recipe — rime paths (`/bin/rime_deployer`, `/bin/rime_patch`) for a component we never build. Tidy whenever the manifest is next touched for real. |
 | 2026-11-19 | Pin the GTK rewrite development environment to GNOME 51 | GNOME 51 is the stable runtime line at phase-3 kickoff; keep it separate from the production KDE runtime until the GTK app passes packaging and GNOME-session checks. |
+| 2026-11-19 | Typed settings writing lives in `shanti-config`; the C ABI stays read-only until the Qt frontend retires | The GTK app writes the same QSettings INI bytes as Qt (fixture byte-comparison test); a single writer during the transition avoids format divergence. Full QSettings escaping for arbitrary string values remains deferred until the GTK app becomes the production writer. |
 
 *Update this log — with a commit — every time a pending row is resolved.*

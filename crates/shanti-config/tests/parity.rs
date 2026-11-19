@@ -65,8 +65,14 @@ fn reads_uint_keys() {
 #[test]
 fn populated_config_falls_back_for_missing_keys_and_respects_written_values() {
     let config = fixture();
-    assert_eq!(config.get_string("settings/Nonexistent/Key", "fallback"), "fallback");
-    assert!(config.get_bool("settings/Nonexistent/Key", true), "fallback");
+    assert_eq!(
+        config.get_string("settings/Nonexistent/Key", "fallback"),
+        "fallback"
+    );
+    assert!(
+        config.get_bool("settings/Nonexistent/Key", true),
+        "fallback"
+    );
     // A flipped fixture value must not be confused with its default.
     assert!(!config.get_bool("settings/FixedLayout/AutoVowelForm", true));
 }
@@ -78,20 +84,24 @@ fn empty_store_yields_all_defaults() {
         assert_eq!(config.get_bool(key, *dflt), *dflt, "key {key}");
     }
     assert_eq!(config.get_uint("settings/TrayInfoCount", 0), 0);
-    assert_eq!(config.get_string("layout/path", "avro_phonetic"), "avro_phonetic");
+    assert_eq!(
+        config.get_string("layout/path", "avro_phonetic"),
+        "avro_phonetic"
+    );
 }
 
 #[test]
 fn point_values_are_kept_raw_for_the_gui_phase() {
     let config = fixture();
-    assert_eq!(config.get_string("window/positions/TopBar", ""), "@Point(120 240)");
+    assert_eq!(
+        config.get_string("window/positions/TopBar", ""),
+        "@Point(120 240)"
+    );
 }
 
 #[test]
 fn comments_and_blank_lines_are_ignored() {
-    let config = Config::parse(
-        "; comment\n# comment\n\n[layout]\npath=avro_phonetic\n",
-    );
+    let config = Config::parse("; comment\n# comment\n\n[layout]\npath=avro_phonetic\n");
     assert_eq!(config.get_string("layout/path", "?"), "avro_phonetic");
 }
 

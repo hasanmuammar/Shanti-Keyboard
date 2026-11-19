@@ -4,6 +4,7 @@ use std::process::ExitCode;
 use adw::prelude::*;
 use adw::{Application, ApplicationWindow, HeaderBar};
 use gtk::{Box as GtkBox, Label, Orientation};
+use shanti_config::Settings;
 
 const REQUIRED_FILES: &[&str] = &[
     "layouts/avrophonetic.json",
@@ -15,6 +16,25 @@ const REQUIRED_FILES: &[&str] = &[
 
 fn print_help() {
     println!("Shanti Keyboard\n\nUsage: shanti-gui-rust [OPTIONS]\n\nOptions:\n      --version     Print version information\n      --check-data  Check installed layouts and dictionary data\n  -h, --help        Print this help");
+}
+
+/// Human-readable snapshot of the typed store, shown in the shell until
+/// the full settings panel lands. Kept pure so it can be tested headless.
+fn settings_summary(settings: &Settings) -> String {
+    format!(
+        "Layout: {} ({})\nANSI encoding: {}\nTray info count: {}\nTop bar: {} at ({}, {})",
+        settings.layout_name,
+        settings.layout_path,
+        if settings.ansi_encoding { "on" } else { "off" },
+        settings.tray_info_count,
+        if settings.top_bar_visibility {
+            "shown"
+        } else {
+            "hidden"
+        },
+        settings.top_bar_position.0,
+        settings.top_bar_position.1,
+    )
 }
 
 fn check_data(root: &Path) -> Result<(), Vec<PathBuf>> {
@@ -83,6 +103,12 @@ fn run() -> ExitCode {
         .application_id("org.shanti.ShantiGtkDev")
         .build();
     application.connect_activate(|application| {
+        // First-run legacy migration and user-dir bootstrap, then the typed
+        // store shared with the IBus engine. Errors fall back to defaults:
+        // the shell is a control plane, not a required input-method runtime.
+        shanti_paths::ensure_user_dirs();
+        let settings = Settings::load().unwrap_or_default();
+
         let content = GtkBox::new(Orientation::Vertical, 0);
         content.append(&HeaderBar::new());
 
@@ -99,8 +125,13 @@ fn run() -> ExitCode {
         ));
         description.set_wrap(true);
 
+        let summary = Label::new(Some(&settings_summary(&settings)));
+        summary.set_wrap(true);
+        summary.set_xalign(0.0);
+
         body.append(&heading);
         body.append(&description);
+        body.append(&summary);
         content.append(&body);
 
         let window = ApplicationWindow::builder()
@@ -122,6 +153,19 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn settings_summary_shows_the_loaded_typed_model() {
+        let settings = shanti_config::Settings::from_ini(
+            "[layout]\nname=Probhat\npath=probhat\n\
+             [settings]\nANSI=true\nTrayInfoCount=5\n\
+             [window]\nvisibility\\TopBar=false\npositions\\TopBar=@Point(10 20)\n",
+        );
+        assert_eq!(
+            settings_summary(&settings),
+            "Layout: Probhat (probhat)\nANSI encoding: on\nTray info count: 5\nTop bar: hidden at (10, 20)"
+        );
+    }
 
     #[test]
     fn data_check_requires_layout_directory_and_runtime_files() {
