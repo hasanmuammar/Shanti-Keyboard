@@ -4,6 +4,7 @@ mod settings_dialog;
 mod about_file;
 mod auto_correct_dialog;
 mod top_bar;
+mod about_dialog;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -225,6 +226,12 @@ fn run() -> ExitCode {
         });
 
         top_bar.present();
+
+        top_bar.icon_btn.connect_clicked(move |_| {
+            let dialog = about_dialog::AboutDialog::new();
+            dialog.window().present();
+        });
+
         window.present();
     });
     application.run().into()
