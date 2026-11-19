@@ -5,6 +5,7 @@ mod about_file;
 mod auto_correct_dialog;
 mod top_bar;
 mod about_dialog;
+mod platform_config;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -118,6 +119,7 @@ fn run() -> ExitCode {
         // store shared with the IBus engine. Errors fall back to defaults:
         // the shell is a control plane, not a required input-method runtime.
         shanti_paths::ensure_user_dirs();
+        platform_config::setup_input_sources();
         let settings = Settings::load().unwrap_or_default();
 
         let content = GtkBox::new(Orientation::Vertical, 0);
