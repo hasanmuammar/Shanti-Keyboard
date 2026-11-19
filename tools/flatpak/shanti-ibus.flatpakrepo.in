@@ -1,0 +1,8 @@
+[Flatpak Repo]
+Version=1
+Title=Shanti Keyboard (IBus)
+Comment=GNOME IBus Flatpak for Shanti Keyboard
+Description=Shanti Keyboard Bengali input method for GNOME IBus.
+Url=@FLATPAK_REPO_URL@
+Homepage=https://github.com/hasanmuammar/Shanti-Keyboard
+GPGKey=@FLATPAK_REPO_GPG_KEY_BASE64@

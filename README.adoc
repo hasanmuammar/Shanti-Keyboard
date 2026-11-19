@@ -60,7 +60,18 @@ For bugs or installation/integration problems introduced by this fork, use this 
 
 === Flatpak (recommended)
 
-Download the architecture-specific IBus bundle (`shanti-ibus-x86_64.flatpak` or `shanti-ibus-aarch64.flatpak`) from the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Install it for your user:
+After the first hosted repository release, install from the signed Shanti
+Flatpak repository to receive updates automatically:
+
+[source,bash]
+----
+flatpak install --user https://hasanmuammar.github.io/Shanti-Keyboard/shanti-ibus.flatpakref
+----
+
+You can also download an architecture-specific IBus bundle
+(`shanti-ibus-x86_64.flatpak` or `shanti-ibus-aarch64.flatpak`) from the
+link:https://github.com/hasanmuammar/Shanti-Keyboard/releases[GitHub Releases]
+page and install it directly:
 
 [source,bash]
 ----

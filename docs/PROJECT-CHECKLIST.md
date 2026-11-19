@@ -44,7 +44,7 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 - [ ] Verify cleanup before/after Flatpak removal and confirm unrelated user files remain untouched.
 - [ ] Decide whether the Flatpak's host-integration permissions are appropriately scoped after real-session testing.
 - [x] CI installs each Flatpak bundle, checks its app/runtime metadata, and launches the GUI offscreen for version and bundled-data checks.
-- [ ] Configure a hosted OSTree repository and public signing key before publishing a `.flatpakref`.
+- [x] Enable GitHub Pages workflow publishing, store the repository signing key as an Actions secret, and add tag-triggered OSTree publishing. The remote becomes available after this workflow is pushed and a tagged deployment succeeds.
 
 ## 4. Current CI evidence
 
@@ -69,7 +69,7 @@ These statuses describe the runs observed on the review date. Check the [Actions
 - [ ] Publish the first Shanti GitHub Release.
 - [ ] Publish the Flatpak through a hosted OSTree repository before describing remote/`.flatpakref` installation as available.
 
-**Current distribution state:** release publication status has not yet been rechecked. The tagged workflow is configured to attach direct-download IBus Flatpak bundles. `release-tag.txt` contains the next release tag; `version.txt` remains the inherited CMake project version.
+**Current distribution state:** GitHub Pages is configured for workflow publishing and the repository signing key is stored as an Actions secret. The signed OSTree repository and install descriptors will publish after this workflow reaches GitHub and an alpha-tag run succeeds. `release-tag.txt` contains the next release tag; `version.txt` remains the inherited CMake project version.
 
 ## 6. Documentation
 

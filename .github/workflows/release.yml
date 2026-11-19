@@ -56,7 +56,11 @@ jobs:
             --install-deps-from=flathub \
             --repo=flatpak-repo \
             build-dir tools/flatpak/shanti-ibus.yml
-          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+          flatpak build-bundle \
+            --arch="$FLATPAK_ARCH" \
+            --repo-url=https://hasanmuammar.github.io/Shanti-Keyboard/repo/ \
+            --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
+            --gpg-keys=tools/flatpak/shanti-ibus-repo-signing-key.asc \
             flatpak-repo "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
             org.shanti.ShantiIbus stable
           sha256sum "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
@@ -78,8 +82,125 @@ jobs:
             shanti-ibus-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
-  release:
+  publish-flatpak-repo:
     needs: build-flatpak
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Download architecture bundles
+        uses: actions/download-artifact@v5
+        with:
+          pattern: flatpak-*
+          merge-multiple: true
+          path: bundles
+
+      - name: Install repository tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak ostree gnupg
+
+      - name: Assemble and sign OSTree repository
+        env:
+          FLATPAK_REPO_SIGNING_KEY: ${{ secrets.FLATPAK_REPO_SIGNING_KEY }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$FLATPAK_REPO_SIGNING_KEY" || {
+            echo "Set the FLATPAK_REPO_SIGNING_KEY Actions secret before publishing." >&2
+            exit 1
+          }
+
+          export GNUPGHOME="$RUNNER_TEMP/shanti-flatpak-gnupg"
+          install -d -m 700 "$GNUPGHOME"
+          printf '%s' "$FLATPAK_REPO_SIGNING_KEY" | gpg --batch --import
+
+          signing_key="$(gpg --batch --with-colons --list-secret-keys \
+            | awk -F: '$1 == "fpr" { print $10; exit }')"
+          public_key="$(gpg --batch --with-colons --show-keys \
+            tools/flatpak/shanti-ibus-repo-signing-key.asc \
+            | awk -F: '$1 == "fpr" { print $10; exit }')"
+          test -n "$signing_key"
+          test "$signing_key" = "$public_key" || {
+            echo "The signing-key secret does not match the committed public key." >&2
+            exit 1
+          }
+
+          mkdir -p site
+          ostree init --repo=site/repo --mode=archive-z2
+          for bundle in bundles/shanti-ibus-x86_64.flatpak bundles/shanti-ibus-aarch64.flatpak; do
+            test -f "$bundle"
+            flatpak build-import-bundle \
+              --gpg-sign="$signing_key" \
+              --gpg-homedir="$GNUPGHOME" \
+              --update-appstream \
+              site/repo "$bundle"
+          done
+
+          flatpak build-update-repo \
+            --gpg-sign="$signing_key" \
+            --gpg-homedir="$GNUPGHOME" \
+            --gpg-import=tools/flatpak/shanti-ibus-repo-signing-key.asc \
+            --title="Shanti Keyboard (IBus)" \
+            --comment="GNOME IBus Flatpak for Shanti Keyboard" \
+            --description="Shanti Keyboard Bengali input method for GNOME IBus." \
+            --homepage="https://github.com/hasanmuammar/Shanti-Keyboard" \
+            --default-branch=stable \
+            --collection-id=org.shanti.ShantiIbus \
+            --deploy-collection-id \
+            site/repo
+
+          repo_url="https://hasanmuammar.github.io/Shanti-Keyboard/repo/"
+          gpg_key="$(gpg --batch --export "$signing_key" | base64 --wrap=0)"
+          sed \
+            -e "s|@FLATPAK_REPO_URL@|$repo_url|g" \
+            -e "s|@FLATPAK_REPO_GPG_KEY_BASE64@|$gpg_key|g" \
+            tools/flatpak/shanti-ibus.flatpakref.in > site/shanti-ibus.flatpakref
+          sed \
+            -e "s|@FLATPAK_REPO_URL@|$repo_url|g" \
+            -e "s|@FLATPAK_REPO_GPG_KEY_BASE64@|$gpg_key|g" \
+            tools/flatpak/shanti-ibus.flatpakrepo.in > site/shanti-ibus.flatpakrepo
+          touch site/.nojekyll
+
+          site_size="$(du -sb site | awk '{ print $1 }')"
+          if (( site_size > 900000000 )); then
+            echo "OSTree site is ${site_size} bytes; GitHub Pages has a 1 GB published-site limit." >&2
+            exit 1
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload OSTree repository site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy OSTree repository
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Upload repository install descriptors
+        uses: actions/upload-artifact@v5
+        with:
+          name: flatpak-install-files
+          path: |
+            site/shanti-ibus.flatpakref
+            site/shanti-ibus.flatpakrepo
+          if-no-files-found: error
+
+  release:
+    needs: [build-flatpak, publish-flatpak-repo]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -90,8 +211,9 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
-          path: release
+          pattern: flatpak-*
           merge-multiple: true
+          path: release
 
       - name: Create GitHub release
         env:

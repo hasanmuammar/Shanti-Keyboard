@@ -11,4 +11,4 @@ RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
 IsRuntime=false
 GPGKey=@FLATPAK_REPO_GPG_KEY_BASE64@
 SuggestRemoteName=shanti-ibus
-Homepage=https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti
+Homepage=https://github.com/hasanmuammar/Shanti-Keyboard

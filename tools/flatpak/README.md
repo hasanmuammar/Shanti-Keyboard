@@ -1,9 +1,10 @@
 # Flatpak packages
 
-Shanti Keyboard is distributed as an IBus Flatpak for GNOME. Download the
-bundle for your architecture from the
-[GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases)
-page (`.x86_64` for most Intel/AMD computers, `.aarch64` for ARM64).
+Shanti Keyboard is distributed as an IBus Flatpak for GNOME. The direct
+release bundles are named `shanti-ibus-x86_64.flatpak` for Intel/AMD and
+`shanti-ibus-aarch64.flatpak` for ARM64. Download them from the
+[GitHub Releases](https://github.com/hasanmuammar/Shanti-Keyboard/releases)
+page.
 
 ---
 
@@ -11,6 +12,24 @@ page (`.x86_64` for most Intel/AMD computers, `.aarch64` for ARM64).
 
 Packages the Shanti settings GUI and the IBus engine as
 `org.shanti.ShantiIbus`.
+
+### Install from the hosted repository
+
+After the first tagged release has published the repository, install Shanti
+from its `.flatpakref` so Flatpak can receive future app updates from the
+Shanti repository:
+
+```sh
+flatpak install --user \
+  https://hasanmuammar.github.io/Shanti-Keyboard/shanti-ibus.flatpakref
+```
+
+The repository serves signed app refs and points to Flathub for the KDE
+runtime. The direct bundle installation below remains available for offline
+transfer or testing a specific release artifact.
+
+After installing from either source, follow the setup steps below. Skip step 2
+if you installed from the hosted `.flatpakref`.
 
 ### Install and add the GNOME input source
 
@@ -26,8 +45,8 @@ Packages the Shanti settings GUI and the IBus engine as
    Flatpak normally downloads it from Flathub during app installation. The
    bundle does not contain the runtime.
 
-2. Install the downloaded bundle. Replace the filename below with your
-   downloaded file:
+2. For a direct bundle installation, install the downloaded file. Replace the
+   filename below with your downloaded bundle:
 
    ```sh
    flatpak install --user ./shanti-ibus-x86_64.flatpak
