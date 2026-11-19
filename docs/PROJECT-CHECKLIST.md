@@ -43,7 +43,7 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 - [ ] Verify logout/login and reboot persistence.
 - [ ] Verify cleanup before/after Flatpak removal and confirm unrelated user files remain untouched.
 - [ ] Decide whether the Flatpak's host-integration permissions are appropriately scoped after real-session testing.
-- [ ] Add an automated Flatpak bundle install/metadata/launch smoke check to CI.
+- [x] CI installs each Flatpak bundle, checks its app/runtime metadata, and launches the GUI offscreen for version and bundled-data checks.
 - [ ] Configure a hosted OSTree repository and public signing key before publishing a `.flatpakref`.
 
 ## 4. Current CI evidence

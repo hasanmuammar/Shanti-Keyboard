@@ -58,6 +58,20 @@ jobs:
             flatpak-repo shanti-ibus-${{ matrix.arch }}.flatpak \
             org.shanti.ShantiIbus stable
 
+      - name: Smoke test Flatpak bundle
+        run: |
+          flatpak install --user --noninteractive --assumeyes \
+            ./shanti-ibus-${{ matrix.arch }}.flatpak
+
+          metadata="$(flatpak info --user --show-metadata org.shanti.ShantiIbus)"
+          grep -Fq 'name=org.shanti.ShantiIbus' <<<"$metadata"
+          grep -Fq 'runtime=org.kde.Platform/' <<<"$metadata"
+
+          flatpak run --user --env=QT_QPA_PLATFORM=offscreen \
+            org.shanti.ShantiIbus --version
+          flatpak run --user --env=QT_QPA_PLATFORM=offscreen \
+            org.shanti.ShantiIbus --check-data
+
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v5
         with:
