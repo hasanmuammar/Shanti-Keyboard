@@ -1,6 +1,7 @@
 mod keyboard;
 mod layout_viewer;
 mod settings_dialog;
+mod about_file;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -158,6 +159,12 @@ fn run() -> ExitCode {
             if let Ok(text) = std::fs::read_to_string(&layout_path) {
                 viewer.set_layout(&text);
             }
+            let viewer_c = viewer.clone();
+            viewer.about_button().connect_clicked(move |_| {
+                if let Some(desc) = viewer_c.desc() {
+                    about_file::AboutFile::new(desc);
+                }
+            });
             dialog.set_content(Some(&viewer.widget().clone()));
             dialog.present();
         });

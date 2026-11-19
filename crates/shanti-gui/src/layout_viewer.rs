@@ -13,12 +13,14 @@ use gtk::{
 use crate::keyboard::KeyboardWidget;
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
 
+#[derive(Clone, Default)]
 pub struct LayoutViewer {
     pub stack: ViewStack,
     keyboard_widget: Rc<KeyboardWidget>,
     image_box: GtkBox,
     normal_button: Button,
     altgr_button: Button,
+    about_button: Button,
     header_box: GtkBox,
     current_desc: Option<shanti_layout::LayoutDesc>,
 }
@@ -57,8 +59,13 @@ impl LayoutViewer {
         altgr_button.add_css_class("flat");
         altgr_button.set_sensitive(false);
 
+        let about_button = Button::with_label("About");
+        about_button.add_css_class("flat");
+        about_button.set_sensitive(false);
+
         header_box.append(&normal_button);
         header_box.append(&altgr_button);
+        header_box.append(&about_button);
 
         stack.set_hhomogeneous(false);
         stack.set_vhomogeneous(false);
@@ -69,6 +76,7 @@ impl LayoutViewer {
             image_box,
             normal_button,
             altgr_button,
+            about_button,
             header_box,
             current_desc: None,
         }
@@ -90,6 +98,10 @@ impl LayoutViewer {
         &self.altgr_button
     }
 
+    pub fn about_button(&self) -> &Button {
+        &self.about_button
+    }
+
     pub fn set_layout(&self, layout_text: &str) {
         let layout = match LayoutFile::parse(layout_text) {
             Ok(layout) => layout,
@@ -105,15 +117,19 @@ impl LayoutViewer {
                 self.stack.set_visible_child_name("keyboard");
                 self.header_box.set_visible(true);
                 self.normal_button.set_sensitive(true);
-                let has_altgr = self.keyboard_widget_has_altgr(&layout);
+                let has_altgr = self.keyboard_widget_has_altgr();
                 self.altgr_button.set_sensitive(has_altgr);
+                self.about_button.set_sensitive(true);
                 self.keyboard_widget.set_mode(crate::keyboard::Mode::Normal);
                 self.normal_button.add_css_class("raised");
                 self.altgr_button.remove_css_class("raised");
             }
             LayoutKind::Phonetic | LayoutKind::Khipro => {
                 self.stack.set_visible_child_name("image");
-                self.header_box.set_visible(false);
+                self.header_box.set_visible(true);
+                self.normal_button.set_sensitive(false);
+                self.altgr_button.set_sensitive(false);
+                self.about_button.set_sensitive(true);
                 self.render_image(layout.desc().image.clone());
             }
         }
@@ -200,11 +216,5 @@ impl LayoutViewer {
 impl Default for LayoutViewer {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl Drop for LayoutViewer {
-    fn drop(&mut self) {
-        // ensure child removed cleanly
     }
 }

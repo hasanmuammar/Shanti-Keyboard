@@ -173,6 +173,7 @@ impl KeyboardState {
     }
 }
 
+#[derive(Clone, Default)]
 pub struct KeyboardWidget {
     area: DrawingArea,
     state: Rc<RefCell<KeyboardState>>,
