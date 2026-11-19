@@ -6,6 +6,7 @@ mod auto_correct_dialog;
 mod top_bar;
 mod about_dialog;
 mod platform_config;
+mod layout_converter;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
