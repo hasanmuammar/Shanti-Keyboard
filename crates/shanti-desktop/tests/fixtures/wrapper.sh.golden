@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Managed by the Shanti Flatpak integration.
+set -euo pipefail
+
+fail() { printf 'Shanti IBus integration: %s\n' "$*" >&2; exit 1; }
+command -v flatpak >/dev/null 2>&1 || fail 'flatpak command not found'
+command -v ibus >/dev/null 2>&1 || fail 'ibus command not found'
+
+ibus_address="$(ibus address)" || fail 'could not get the host IBus address'
+[[ "$ibus_address" == unix:path=* ]] || fail 'unsupported host IBus address'
+ibus_socket="${ibus_address#unix:path=}"
+ibus_socket="${ibus_socket%%,*}"
+[[ -n "$ibus_socket" && "$ibus_socket" == /* ]] || fail 'invalid host IBus socket path'
+
+host_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+config_dir="$host_config_home/Shanti"
+flatpak_args=("--filesystem=$ibus_socket:ro" "--env=IBUS_ADDRESS=$ibus_address" "--env=XDG_CONFIG_HOME=$host_config_home")
+if [[ -d "$config_dir" ]]; then
+    flatpak_args+=("--filesystem=$config_dir:ro")
+fi
+
+flatpak_pid=""
+cleanup() {
+    local status=$?
+    trap - EXIT INT TERM HUP
+    if [[ -n "$flatpak_pid" ]]; then
+        if kill -0 -- "-$flatpak_pid" 2>/dev/null; then
+            kill -TERM -- "-$flatpak_pid" 2>/dev/null || true
+            for _ in {1..20}; do
+                kill -0 -- "-$flatpak_pid" 2>/dev/null || break
+                sleep 0.1
+            done
+            kill -KILL -- "-$flatpak_pid" 2>/dev/null || true
+        fi
+        wait "$flatpak_pid" 2>/dev/null || true
+    fi
+    exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+set -m
+
+flatpak run "${flatpak_args[@]}" \
+    --talk-name=org.freedesktop.IBus \
+    --own-name=org.freedesktop.IBus.Shanti \
+    --command=/app/libexec/ibus-engine-shanti \
+    org.shanti.ShantiIbus --ibus "$@" &
+flatpak_pid=$!
+
+set +e
+wait "$flatpak_pid"
+status=$?
+set -e
+exit "$status"

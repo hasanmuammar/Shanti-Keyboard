@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Managed by the Shanti Flatpak integration.-->
+<component>
+    <name>org.freedesktop.IBus.Shanti</name>
+    <description>Shanti Keyboard (Flatpak engine)</description>
+    <exec>'/home/testuser/.local/share/shanti-ibus/ibus-flatpak-host-wrapper.sh'</exec>
+    <version>3.0.0</version>
+    <author>Shanti</author>
+    <license>GPL-3.0-or-later</license>
+    <homepage>https://github.com/hasanmuammar/Shanti-Keyboard-Shanti</homepage>
+    <textdomain>shanti-keyboard</textdomain>
+    <engines>
+        <engine>
+            <name>Shanti</name>
+            <longname>Shanti Keyboard</longname>
+            <description>Shanti Bengali input method running in Flatpak</description>
+            <language>bn</language>
+            <license>GPL-3.0-or-later</license>
+            <author>Shanti</author>
+            <layout>default</layout>
+            <rank>80</rank>
+            <symbol>অ</symbol>
+        </engine>
+    </engines>
+</component>

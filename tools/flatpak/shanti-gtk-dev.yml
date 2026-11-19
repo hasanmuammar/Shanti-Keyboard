@@ -35,6 +35,9 @@ modules:
       - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
       - cargo test --locked --manifest-path crates/shanti-gui/Cargo.toml
       - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml -- -D warnings
+      - cargo fmt --check --manifest-path crates/shanti-desktop/Cargo.toml
+      - cargo test --locked --manifest-path crates/shanti-desktop/Cargo.toml
+      - cargo clippy --locked --manifest-path crates/shanti-desktop/Cargo.toml --all-targets -- -D warnings
       - SHANTI_VERSION="$(cat version.txt)" cargo build --locked --release --manifest-path crates/shanti-gui/Cargo.toml
       - install -Dm755 /run/build/shanti-gtk-dev/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui-rust
       - install -d /app/share/shanti-keyboard/layouts /app/share/shanti-keyboard/data

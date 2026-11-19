@@ -1,0 +1,5 @@
+# Managed by the Shanti Flatpak integration.
+[Service]
+Environment="IBUS_COMPONENT_PATH=/home/testuser/.local/share/ibus/component:/usr/share/ibus/component"
+ExecStart=
+ExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh

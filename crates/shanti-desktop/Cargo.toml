@@ -1,0 +1,10 @@
+[package]
+name = "shanti-desktop"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+description = "Rust port of the GNOME IBus desktop-integration and setup/removal flows shared with the GTK rewrite."
+publish = false
+
+[lib]
+crate-type = ["lib", "staticlib"]
