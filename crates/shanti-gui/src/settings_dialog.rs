@@ -3,6 +3,7 @@ use std::rc::Rc;
 use adw::prelude::*;
 use adw::{PreferencesWindow, PreferencesPage, PreferencesGroup, ActionRow, ToggleSwitch, ComboRow, EntryRow};
 use gtk::{prelude::*, Button};
+use crate::auto_correct_dialog::AutoCorrectDialog;
 use shanti_config::Settings;
 
 use shanti_desktop::{install_files, remove_files, Paths, Error};
@@ -113,6 +114,10 @@ impl SettingsDialog {
         let autocorrect_btn = Button::with_label("Manage AutoCorrect entries");
         autocorrect_btn.set_hexpand(true);
         autocorrect_btn.set_halign(gtk::Align::End);
+        autocorrect_btn.connect_clicked(move |_| {
+            let dialog = AutoCorrectDialog::new();
+            dialog.window().present();
+        });
         phonetic_group.add(&autocorrect_btn);
 
         // ---- Fixed page ----

@@ -2,6 +2,7 @@ mod keyboard;
 mod layout_viewer;
 mod settings_dialog;
 mod about_file;
+mod auto_correct_dialog;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
