@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 
 detect_desktop_backend() {
-    case "${XDG_CURRENT_DESKTOP:-}:${XDG_SESSION_DESKTOP:-}:${DESKTOP_SESSION:-}" in
-        *KDE*|*kde*|*PLASMA*|*plasma*)
-            OBK_BACKEND=fcitx
-            ;;
-        *)
-            OBK_BACKEND=ibus
-            ;;
-    esac
+    OBK_BACKEND=ibus
     export OBK_BACKEND
 }
 

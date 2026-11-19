@@ -15,16 +15,8 @@ jobs:
         include:
           - runner: ubuntu-24.04
             arch: x86_64
-            backend: ibus
-          - runner: ubuntu-24.04
-            arch: x86_64
-            backend: fcitx
           - runner: ubuntu-24.04-arm
             arch: aarch64
-            backend: ibus
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-            backend: fcitx
 
     runs-on: ${{ matrix.runner }}
 
@@ -37,7 +29,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y             build-essential             cmake             ninja-build             pkg-config             rustc             cargo             libzstd-dev             qtbase5-dev             qtbase5-dev-tools             libqt5svg5-dev             libibus-1.0-dev             libfcitx5core-dev             ca-certificates
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config rustc cargo libzstd-dev qtbase5-dev qtbase5-dev-tools libqt5svg5-dev libibus-1.0-dev ca-certificates
 
       - name: Check shell syntax
         run: |
@@ -145,16 +137,15 @@ jobs:
         env:
           SHANTI_BUILD_USE_HOST: "1"
           SHANTI_NONINTERACTIVE: "1"
-        run: bash tools/build.sh --backend ${{ matrix.backend }} --package
+        run: bash tools/build.sh --backend ibus --package
 
       - name: Validate package
         env:
-          BACKEND: ${{ matrix.backend }}
           ARCH: ${{ matrix.arch }}
         run: |
           set -Eeuo pipefail
 
-          archive="dist/shanti-keyboard_linux_${ARCH}_${BACKEND}.tar.gz"
+          archive="dist/shanti-keyboard_linux_${ARCH}_ibus.tar.gz"
           checksum="${archive}.sha256"
 
           test -f "$archive"
@@ -198,29 +189,19 @@ jobs:
           bash -n "$work/share/shanti-keyboard/tools/install.sh"
           bash -n "$work/share/shanti-keyboard/tools/uninstall.sh"
 
-          # Rewrite phase 1 contract: the shipped IBus engine must be Qt-free
-          # (its settings/paths support moved to the Rust shanti-config and
-          # shanti-paths crates; see docs/REWRITE-PLAN.md). IBus backend only:
-          # the fcitx archive does not carry the ibus engine binary.
-          if [ "$BACKEND" = "ibus" ]; then
-            ibus_engine="$work/libexec/ibus-engine-shanti"
-            test -x "$ibus_engine"
-            if ldd "$ibus_engine" | grep -qi 'libQt'; then
-              echo "IBus engine links Qt libraries (must be Qt-free):" >&2
-              ldd "$ibus_engine" | grep -i 'libQt' >&2
-              exit 1
-            fi
+          # The IBus engine is Qt-free; settings and paths use the Rust crates.
+          ibus_engine="$work/libexec/ibus-engine-shanti"
+          test -x "$ibus_engine"
+          if ldd "$ibus_engine" | grep -qi 'libQt'; then
+            echo "IBus engine links Qt libraries (must be Qt-free):" >&2
+            ldd "$ibus_engine" | grep -i 'libQt' >&2
+            exit 1
           fi
 
-          if [[ "$BACKEND" == ibus ]]; then
-            test -x "$work/libexec/ibus-engine-shanti"
-            test -f "$work/share/ibus/component/shanti.xml"
-            grep -Fq '<exec>@OBK_PREFIX@/libexec/ibus-engine-shanti --ibus</exec>' "$work/share/ibus/component/shanti.xml"
-            grep -Fq '<icon>@OBK_DATA_HOME@/shanti-keyboard/icons/Shanti-Keyboard.png</icon>' "$work/share/ibus/component/shanti.xml"
-            ! grep -Fq '/home/runner/' "$work/share/ibus/component/shanti.xml"
-          else
-            test -f "$work/share/fcitx5/addon/shanti.conf"
-          fi
+          test -f "$work/share/ibus/component/shanti.xml"
+          grep -Fq '<exec>@OBK_PREFIX@/libexec/ibus-engine-shanti --ibus</exec>' "$work/share/ibus/component/shanti.xml"
+          grep -Fq '<icon>@OBK_DATA_HOME@/shanti-keyboard/icons/Shanti-Keyboard.png</icon>' "$work/share/ibus/component/shanti.xml"
+          ! grep -Fq '/home/runner/' "$work/share/ibus/component/shanti.xml"
 
           XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --version
           XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --check-data
@@ -245,7 +226,7 @@ jobs:
           OBK_PREFIX="$install_prefix" \
           OBK_STAGE="$install_stage" \
           OBK_DATA_HOME="$install_data_home" \
-          OBK_BACKEND="$BACKEND" \
+          OBK_BACKEND=ibus \
           bash -c '
             set -Eeuo pipefail
             source tools/portable/common.sh
@@ -267,15 +248,10 @@ jobs:
 
             QT_QPA_PLATFORM=offscreen "$OBK_PREFIX/bin/shanti-gui" --check-data
 
-            if [[ "$OBK_BACKEND" == ibus ]]; then
-              grep -Fq "<exec>\"$OBK_PREFIX/libexec/ibus-engine-shanti\" --ibus</exec>" \
-                "$OBK_DATA_HOME/ibus/component/shanti.xml"
-              grep -Fq "<icon>$OBK_DATA_HOME/shanti-keyboard/icons/Shanti-Keyboard.png</icon>" \
-                "$OBK_DATA_HOME/ibus/component/shanti.xml"
-            else
-              test -f "$OBK_DATA_HOME/fcitx5/addon/shanti.conf"
-              test -f "$OBK_DATA_HOME/fcitx5/inputmethod/shanti.conf"
-            fi
+            grep -Fq "<exec>\"$OBK_PREFIX/libexec/ibus-engine-shanti\" --ibus</exec>" \
+              "$OBK_DATA_HOME/ibus/component/shanti.xml"
+            grep -Fq "<icon>$OBK_DATA_HOME/shanti-keyboard/icons/Shanti-Keyboard.png</icon>" \
+              "$OBK_DATA_HOME/ibus/component/shanti.xml"
 
             # Regression test: merge collisions must not delete skipped user data.
             migration_prefix="$HOME/migration/.local"
@@ -361,11 +337,6 @@ jobs:
           test -f "$test_home/.local/unrelated/valuable.txt"
           test "$(cat "$test_home/.local/unrelated/valuable.txt")" = 'keep this file'
           HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/shanti"'
-          if HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/vendor/nested/fcitx5/shanti.so"'; then
-            echo "Uninstaller unexpectedly accepted a deeply nested lookalike Fcitx module." >&2
-            exit 1
-          fi
-          HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/x86_64-linux-gnu/fcitx5/shanti.so"'
 
           # Recursive removal must remove only the named tree, not follow child symlinks.
           outside="$test_home/outside"
@@ -401,7 +372,7 @@ jobs:
       - name: Upload prebuilt package
         uses: actions/upload-artifact@v5
         with:
-          name: linux-${{ matrix.arch }}-${{ matrix.backend }}-package
+          name: linux-${{ matrix.arch }}-ibus-package
           path: |
             dist/*.tar.gz
             dist/*.sha256

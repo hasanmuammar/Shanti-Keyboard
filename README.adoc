@@ -5,7 +5,7 @@
 
 ### ⚠️ HIGHLY EXPERIMENTAL FORK
 
-image:https://img.shields.io/badge/platform-Linux-333333?logo=linux&logoColor=white[Linux] image:https://img.shields.io/badge/input%20method-IBus%20%7C%20Fcitx5-0F6CBD[Input methods] image:https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white[CMake] image:https://img.shields.io/badge/UI-Qt5-41CD52?logo=qt&logoColor=white[Qt5] image:https://img.shields.io/badge/C%2B%2B%20%7C%20Rust-00599C?logo=rust&logoColor=white[C++ and Rust]
+image:https://img.shields.io/badge/platform-Linux-333333?logo=linux&logoColor=white[Linux] image:https://img.shields.io/badge/input%20method-IBus-0F6CBD[Input methods] image:https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white[CMake] image:https://img.shields.io/badge/UI-Qt5-41CD52?logo=qt&logoColor=white[Qt5] image:https://img.shields.io/badge/C%2B%2B%20%7C%20Rust-00599C?logo=rust&logoColor=white[C++ and Rust]
 
 This repository is **Shanti Keyboard**, a **Linux-focused fork of OpenBangla Keyboard created to make it easy to install on modern Linux operating systems such as Bazzite and Bluefin**. It keeps the OpenBangla Keyboard codebase while adding a simpler prebuilt installation and runtime-bundling workflow for conventional Linux systems and modern atomic/image-based systems.
 
@@ -26,8 +26,8 @@ This is an experimental fork. Some fork-specific installation, packaging, runtim
 == What this fork provides
 
 * **Prebuilt Linux releases** for x86_64 and ARM64.
-* **Flatpak packages for both input-method stacks:** GNOME uses IBus (`org.shanti.ShantiIbus`); Fcitx5-based desktops get a self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`).
-* **Automatic backend selection for source/portable installs:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
+* **GNOME IBus Flatpak:** the bundled app is `org.shanti.ShantiIbus`.
+* **IBus-only input integration** for GNOME.
 * **User-local installation** under `~/.local` without a system-wide package install.
 * **Source builds** remain available through `tools/build.sh`.
 * **Isolated source builds** using Toolbx, Distrobox, Podman, or Docker.
@@ -46,7 +46,7 @@ The Shanti Keyboard codebase is built for Bangla typing on Linux and includes:
 * Typing automation for fixed layouts.
 * Dictionary-based suggestions and autocorrection.
 * A Qt-based configuration interface (`shanti-gui`).
-* Linux desktop integration through IBus or Fcitx5.
+* Linux desktop integration through IBus on GNOME.
 
 
 == Installation
@@ -58,14 +58,16 @@ The Shanti Keyboard codebase is built for Bangla typing on Linux and includes:
 For bugs or installation/integration problems introduced by this fork, use this repository's issue tracker. Do not send fork-specific reports to upstream.
 ====
 
-=== Flatpak (recommended; pick one for your desktop)
+=== Flatpak (recommended)
 
-Both Flatpaks are architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Which one fits:
+Download the architecture-specific IBus bundle (`shanti-ibus-x86_64.flatpak` or `shanti-ibus-aarch64.flatpak`) from the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Install it for your user:
 
-* **GNOME** (Ubuntu, Fedora Workstation, atomic/image-based systems running GNOME): the IBus package `shanti-ibus-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiIbus`.
-* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 app `shanti-fcitx5-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiFcitx5`. One self-contained bundle: the sandboxed Fcitx5 stack (daemon, config tool, Qt input-context plugin) plus the Shanti engine — and the **same `shanti-gui` settings app as the IBus bundle**, so no host Fcitx5 is required and nothing else needs installing.
+[source,bash]
+----
+flatpak install --user ./shanti-ibus-x86_64.flatpak
+----
 
-Both packages use the same Flathub runtime `org.kde.Platform//5.15-25.08`; Flatpak normally downloads it during installation. See the link:tools/flatpak/README.md[Flatpak guide] for per-desktop commands, the Fcitx5 login-autostart step and setup.
+The app uses the Flathub `org.kde.Platform//5.15-25.08` runtime and offers GNOME IBus integration setup on first launch. Follow the link:tools/flatpak/README.md[Flatpak guide] to register Shanti and add it as a GNOME input source.
 
 === Prebuilt installation
 
@@ -76,7 +78,7 @@ Supported architectures:
 * x86_64
 * ARM64 (aarch64)
 
-KDE Plasma automatically uses Fcitx5. Other desktop environments automatically use IBus.
+This branch provides the IBus engine for GNOME.
 
 From a source checkout, install with `bash tools/install.sh`. The default release tag is in `release-tag.txt`; use `bash tools/install.sh --version TAG` to choose another release. The CMake project version is tracked separately in `version.txt`.
 
@@ -94,21 +96,11 @@ The source build can use Toolbx, Distrobox, Podman, or Docker to keep build depe
 [source,bash]
 ----
 bash tools/build.sh --backend ibus --package
-bash tools/build.sh --backend fcitx --package
 ----
 
 === Automated build and package testing
 
-GitHub Actions currently tests source builds across:
-
-* x86_64 with GCC and Clang.
-* x86_64 with IBus and Fcitx5.
-* ARM64 (aarch64) with GCC.
-* ARM64 (aarch64) with IBus and Fcitx5.
-
-A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `shanti-gui --version` plus `shanti-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
-
-The installer checks that the required data files are present. You can repeat the check with `~/.local/bin/shanti-gui --check-data`. CI validates builds and package contents; it does not replace testing Bangla input on your desktop.
+GitHub Actions builds the IBus app and Flatpak bundle for x86_64 and aarch64. The package workflow also checks release archive integrity, paths, installation metadata, the bundled GUI and data discovery. CI does not replace testing Bengali input in a real GNOME session.
 
 == Related projects and technologies
 
@@ -118,7 +110,7 @@ This project uses or integrates with several established open-source projects. T
 |===
 |Build environments |Input methods |Core build/runtime |Upstream / dependencies
 |https://github.com/containers/toolbox[image:https://img.shields.io/badge/Toolbx-Container%20development-444444?logo=linux&logoColor=white[Toolbx]] |https://github.com/ibus/ibus[image:https://img.shields.io/badge/IBus-Linux%20input%20method-5A5A5A?logo=linux&logoColor=white[IBus]] |https://github.com/qt/qtbase[image:https://img.shields.io/badge/Qt5-Qt%20Widgets-41CD52?logo=qt&logoColor=white[Qt5]] |https://github.com/OpenBangla/OpenBangla-Keyboard[image:https://img.shields.io/badge/OpenBangla-Upstream-555555?logo=github&logoColor=white[OpenBangla upstream]]
-|https://github.com/89luca89/distrobox[image:https://img.shields.io/badge/Distrobox-Containers-555555?logo=linux&logoColor=white[Distrobox]] |https://github.com/fcitx/fcitx5[image:https://img.shields.io/badge/Fcitx5-KDE%20Plasma-555555?logo=linux&logoColor=white[Fcitx5]] |https://github.com/Kitware/CMake[image:https://img.shields.io/badge/CMake-Build%20system-064F8C?logo=cmake&logoColor=white[CMake]] |https://github.com/corrosion-rs/corrosion[image:https://img.shields.io/badge/Corrosion-Rust%20%2B%20CMake-555555?logo=rust&logoColor=white[Corrosion]]
+|https://github.com/89luca89/distrobox[image:https://img.shields.io/badge/Distrobox-Containers-555555?logo=linux&logoColor=white[Distrobox]] |— |https://github.com/Kitware/CMake[image:https://img.shields.io/badge/CMake-Build%20system-064F8C?logo=cmake&logoColor=white[CMake]] |https://github.com/corrosion-rs/corrosion[image:https://img.shields.io/badge/Corrosion-Rust%20%2B%20CMake-555555?logo=rust&logoColor=white[Corrosion]]
 |https://github.com/containers/podman[image:https://img.shields.io/badge/Podman-Containers-892CA0?logo=podman&logoColor=white[Podman]] |— |https://github.com/facebook/zstd[image:https://img.shields.io/badge/Zstandard-zstd-555555?logo=github&logoColor=white[Zstandard]] |—
 |https://github.com/moby/moby[image:https://img.shields.io/badge/Docker-Containers-2496ED?logo=docker&logoColor=white[Docker]] |— |https://github.com/ninja-build/ninja[image:https://img.shields.io/badge/Ninja-Build-555555?logo=github&logoColor=white[Ninja]] |—
 |===
@@ -145,7 +137,7 @@ Flatpak removal commands for both packages are in the link:tools/flatpak/README.
 
 == Manual Linux build
 
-The CMake project supports one input-method backend per build. For the normal source-build workflow, prefer `tools/build.sh` so build isolation, cache handling and packaging remain consistent. The manual commands below are for developers who specifically need to configure CMake directly.
+This branch builds the IBus engine only. For normal source builds, prefer `tools/build.sh`; the manual command is for developers who need to configure CMake directly.
 
 === IBus
 
@@ -154,30 +146,13 @@ The CMake project supports one input-method backend per build. For the normal so
 cmake -S . -B build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-  -DENABLE_IBUS=ON \
-  -DENABLE_FCITX=OFF
+  -DENABLE_IBUS=ON
 
 cmake --build build --parallel 2
 cmake --install build
 ----
 
-=== Fcitx5
-
-[source,bash]
-----
-cmake -S . -B build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-  -DENABLE_IBUS=OFF \
-  -DENABLE_FCITX=ON
-
-cmake --build build --parallel 2
-cmake --install build
-----
-
-Pass `-DBUILD_FRONTEND=OFF` to skip the Qt5 settings GUI — this is how the Fcitx5 Flatpak engine module builds, since its manifest has no Qt5 in the build environment.
-
-The build requires Qt5, CMake, Ninja, a C/C++ compiler, Rust/Cargo, zstd development files, and the development files for the selected input-method backend.
+The build requires Qt5, CMake, Ninja, a C/C++ compiler, Rust/Cargo, zstd development files, and IBus development files.
 
 == Development
 
@@ -214,7 +189,7 @@ Project-specific documentation is kept under `docs/wiki/`.
 |Path |Purpose
 
 |`tools/install.sh`
-|Prebuilt Linux installer; selects IBus or Fcitx5 and x86_64 or ARM64 automatically.
+|Prebuilt Linux installer for IBus on x86_64 or ARM64.
 
 |`tools/build.sh`
 |Source-build and release-packaging entry point.
@@ -229,16 +204,13 @@ Project-specific documentation is kept under `docs/wiki/`.
 |Backend selection, isolated build, runtime bundling and installation logic.
 
 |`tools/flatpak/`
-|Flatpak manifests (IBus app + Fcitx5 addon) and the user guide.
+|GNOME IBus Flatpak manifest and the user guide.
 
 |`crates/`
-|The Rust core: settings store reader, path discovery, and the engine state machine shared by both input-method backends.
+|The Rust core: settings store reader, path discovery, and the IBus engine state machine.
 
 |`src/engine/ibus/`
 |IBus backend (`ibus-engine-shanti`).
-
-|`src/engine/fcitx/`
-|Fcitx5 backend (`shanti` addon).
 
 |`src/frontend/`
 |Qt GUI (`shanti-gui`).

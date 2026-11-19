@@ -16,24 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- enum class DesktopEnvironment {
+enum class DesktopEnvironment {
     Unknown,
-    Windows,
-    macOS,
-    GNOME,
-    KDE,
-    XFCE,
-    LXDE,
-    LXQt,
-    MATE,
-    Cinnamon,
-    Budgie,
-    Unity,
-    Pantheon,
-    Deepin,
-    ZorinOS,
-    Wayland,
-    X11
+    GNOME
 };
 
 DesktopEnvironment detectDesktopEnvironment();

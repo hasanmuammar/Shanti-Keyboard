@@ -1,5 +1,5 @@
 // GENERATED from data/keysyms.tsv by generator/keysyms_extract.py - do not edit.
-// Sorted by keysym value (X keysym, valid for both IBus and Fcitx enums).
+// Sorted by IBus keysym value (X keysym).
 
 pub static KEYSYMS: [(u32, &str); 112] = [
     (33, "VC_EXCLAIM"),

@@ -1,29 +1,15 @@
-# Input Methods — IBus and Fcitx5
+# Input Methods — GNOME and IBus
 
-The portable installer builds one input-method backend per installation.
+This branch supports the IBus input-method framework on GNOME.
 
 ## IBus
 
-IBus is selected for GNOME and other non-KDE/Plasma desktops.
+The portable component file is installed at `~/.local/share/ibus/component/shanti.xml`. The engine is installed at `~/.local/libexec/ibus-engine-shanti`. The portable installer configures `IBUS_COMPONENT_PATH` for user services.
 
-The component file is installed at ~/.local/share/ibus/component/shanti.xml. (Upgrades from the pre-rebrand release leave an old `openbangla.xml` behind; the rebranded installer removes it.)
+## Bundled Flatpak
 
-The engine is installed at ~/.local/libexec/ibus-engine-shanti.
+The GNOME app is `org.shanti.ShantiIbus`. Its Settings panel offers GNOME IBus registration status, setup/repair and removal. Setup writes a user component descriptor, launcher script and systemd user-service drop-in, then reloads systemd and restarts GNOME IBus. See the [Flatpak guide](../../tools/flatpak/README.md) for setup, permissions and removal.
 
-The installer persists IBUS_COMPONENT_PATH for user services so GNOME-managed IBus can discover the component.
-
-## Fcitx5
-
-Fcitx5 is selected for KDE/Plasma.
-
-The addon id is `shanti`: the module is installed as `lib/fcitx5/shanti.so`, the input-method and addon configs as `share/fcitx5/{inputmethod,addon}/shanti.conf` under the user-local prefix and updates the user Fcitx5 profile when possible.
-
-The portable installer does not build both backends at the same time.
-
-## IBus-only Flatpak
-
-The IBus Flatpak uses app ID `org.shanti.ShantiIbus` and includes only the IBus engine. The Fcitx5 desktop is served by a separate self-contained Flatpak, `org.shanti.ShantiFcitx5`, which builds the whole Fcitx5 stack (daemon, config tool, Qt input-context plugin) plus our engine and the very same `shanti-gui` settings GUI on the same Qt5 runtime — including on immutable desktops such as Kinoite. On GNOME, the app offers first-launch setup and has **GNOME IBus Integration** controls in its Settings panel to show status, set up or repair the host registration, and remove it. Setup writes a user component descriptor, launcher script and systemd user-service drop-in, then reloads systemd and restarts GNOME IBus. This is separate from the portable installer's `IBUS_COMPONENT_PATH` setup. See the [Flatpak guide](../../tools/flatpak/README.md) for the step-by-step flow, permissions and removal details.
 ## Projects
 
-- [IBus](https://github.com/ibus/ibus) provides the Linux input-method framework used on GNOME and other non-KDE/Plasma desktops.
-- [Fcitx5](https://github.com/fcitx/fcitx5) provides the Linux input-method framework used on KDE Plasma.
+- [IBus](https://github.com/ibus/ibus) provides the Linux input-method framework used on GNOME.

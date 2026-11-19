@@ -155,9 +155,7 @@ xdg_resource_relatives() {
         applications/shanti-keyboard.desktop \
         metainfo/org.shanti.ShantiKeyboard.metainfo.xml \
         pixmaps/shanti-keyboard.png \
-        ibus/component/shanti.xml \
-        fcitx5/addon/shanti.conf \
-        fcitx5/inputmethod/shanti.conf
+        ibus/component/shanti.xml
     for size in 16 32 48 128 512 1024; do
         printf '%s\n' "icons/hicolor/${size}x${size}/apps/shanti-keyboard.png"
     done
@@ -167,9 +165,7 @@ xdg_resource_relatives() {
         applications/openbangla-keyboard.desktop \
         metainfo/io.github.openbangla.keyboard.metainfo.xml \
         pixmaps/openbangla-keyboard.png \
-        ibus/component/openbangla.xml \
-        fcitx5/addon/openbangla.conf \
-        fcitx5/inputmethod/openbangla.conf
+        ibus/component/openbangla.xml
     for size in 16 32 48 128 512 1024; do
         printf '%s\n' "icons/hicolor/${size}x${size}/apps/openbangla-keyboard.png"
     done
@@ -360,15 +356,11 @@ confirm_install_replacements() {
         "$OBK_PREFIX/share/shanti-keyboard" \
         "$OBK_PREFIX/share/applications/shanti-keyboard.desktop" \
         "$OBK_PREFIX/share/ibus/component/shanti.xml" \
-        "$OBK_PREFIX/share/fcitx5/addon/shanti.conf" \
-        "$OBK_PREFIX/share/fcitx5/inputmethod/shanti.conf" \
         "$OBK_PREFIX/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml" \
         "$OBK_PREFIX/share/pixmaps/shanti-keyboard.png" \
         "$OBK_DATA_HOME/shanti-keyboard" \
         "$OBK_DATA_HOME/applications/shanti-keyboard.desktop" \
         "$OBK_DATA_HOME/ibus/component/shanti.xml" \
-        "$OBK_DATA_HOME/fcitx5/addon/shanti.conf" \
-        "$OBK_DATA_HOME/fcitx5/inputmethod/shanti.conf" \
         "$OBK_DATA_HOME/metainfo/org.shanti.ShantiKeyboard.metainfo.xml" \
         "$OBK_DATA_HOME/pixmaps/shanti-keyboard.png" \
         "$config_home/environment.d/90-shanti-ibus.conf"; do
@@ -395,23 +387,6 @@ confirm_install_replacements() {
             found=1
         fi
     done
-
-    if [[ "$OBK_BACKEND" == fcitx ]]; then
-        path="$OBK_PREFIX/lib/fcitx5/shanti.so"
-        assert_no_symlink_components "$path"
-        if [[ -L "$OBK_PREFIX/lib/fcitx5" || -L "$path" ]]; then
-            die "Refusing to overwrite the Fcitx module through a symlinked path: $path"
-        fi
-        if [[ -e "$path" ]]; then
-            [[ -f "$path" ]] ||
-                die "Existing Fcitx module path is not a regular file: $path"
-            if [[ "$found" -eq 0 ]]; then
-                printf 'These existing Shanti (or legacy) paths may be replaced by the installation:\n'
-            fi
-            printf '  %s\n' "$path"
-            found=1
-        fi
-    fi
 
     for size in 16 32 48 128 512 1024; do
         for icon_root in "$OBK_PREFIX/share/icons" "$OBK_DATA_HOME/icons"; do
@@ -452,9 +427,7 @@ remove_legacy_registrations() {
         "$OBK_DATA_HOME/ibus/component/openbangla.xml" \
         "$OBK_DATA_HOME/applications/openbangla-keyboard.desktop" \
         "$OBK_DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml" \
-        "$OBK_DATA_HOME/pixmaps/openbangla-keyboard.png" \
-        "$OBK_DATA_HOME/fcitx5/addon/openbangla.conf" \
-        "$OBK_DATA_HOME/fcitx5/inputmethod/openbangla.conf"; do
+        "$OBK_DATA_HOME/pixmaps/openbangla-keyboard.png"; do
         if [[ -L "$path" ]]; then
             die "Refusing to replace a legacy registration through a symlinked path: $path"
         fi
@@ -626,16 +599,8 @@ verify_installation() {
     "$OBK_PREFIX/bin/shanti-gui" --check-data >/dev/null 2>&1 ||
         die "The installed runtime cannot locate its layout and dictionary data files."
 
-    case "$OBK_BACKEND" in
-        ibus)
-            [[ -x "$OBK_PREFIX/libexec/ibus-engine-shanti" ]] ||
-                die "The IBus engine was not installed."
-            [[ -f "$OBK_DATA_HOME/ibus/component/shanti.xml" ]] ||
-                die "The IBus component metadata was not installed under XDG_DATA_HOME."
-            ;;
-        fcitx)
-            [[ -f "$OBK_DATA_HOME/fcitx5/addon/shanti.conf" ]] ||
-                die "The Fcitx5 addon was not installed under XDG_DATA_HOME."
-            ;;
-    esac
+    [[ -x "$OBK_PREFIX/libexec/ibus-engine-shanti" ]] ||
+        die "The IBus engine was not installed."
+    [[ -f "$OBK_DATA_HOME/ibus/component/shanti.xml" ]] ||
+        die "The IBus component metadata was not installed under XDG_DATA_HOME."
 }

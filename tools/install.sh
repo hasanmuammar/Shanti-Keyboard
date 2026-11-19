@@ -47,10 +47,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 detect_backend() {
-    case "${XDG_CURRENT_DESKTOP:-}:${XDG_SESSION_DESKTOP:-}:${DESKTOP_SESSION:-}" in
-        *KDE*|*kde*|*PLASMA*|*plasma*) OBK_BACKEND=fcitx ;;
-        *) OBK_BACKEND=ibus ;;
-    esac
+    OBK_BACKEND=ibus
     export OBK_BACKEND
 }
 
@@ -268,16 +265,8 @@ download_release() {
         die "The downloaded release is incomplete: the bundled runtime directory is missing."
     [[ -d "$staged_root/share/shanti-keyboard" ]] ||
         die "The downloaded release is incomplete: application data is missing."
-    case "$OBK_BACKEND" in
-        ibus)
-            [[ -x "$staged_root/libexec/ibus-engine-shanti" && -f "$staged_root/share/ibus/component/shanti.xml" ]] ||
-                die "The downloaded IBus release is incomplete."
-            ;;
-        fcitx)
-            [[ -f "$staged_root/share/fcitx5/addon/shanti.conf" && -f "$staged_root/share/fcitx5/inputmethod/shanti.conf" ]] ||
-                die "The downloaded Fcitx release is incomplete."
-            ;;
-    esac
+    [[ -x "$staged_root/libexec/ibus-engine-shanti" && -f "$staged_root/share/ibus/component/shanti.xml" ]] ||
+        die "The downloaded IBus release is incomplete."
 
     # Smoke-test the staged executable and its data before changing the current install.
     # Redirect XDG_DATA_HOME into the staging tree so checks cannot initialize real user data.

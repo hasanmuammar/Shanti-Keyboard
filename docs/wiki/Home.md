@@ -8,7 +8,7 @@ Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.
 
 The primary target systems are Bluefin/Dakota, Bazzite, and similar modern atomic Linux distributions. Other Linux desktops may work, but compatibility should be treated as unverified unless supported by a documented test.
 
-Two Flatpaks are distributed through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases): the IBus engine app `org.shanti.ShantiIbus` for GNOME, and the Fcitx5 app `org.shanti.ShantiFcitx5` for Fcitx5 desktops (a self-contained bundle — the self-built Fcitx5 stack, our engine and `fcitx5-configtool`; both bundles include the same `shanti-gui` settings GUI and run on the same Qt5 runtime; no host Fcitx5 required). See the [Flatpak guide](../../tools/flatpak/README.md).
+The GNOME IBus app `org.shanti.ShantiIbus` is distributed as an architecture-specific Flatpak bundle through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). See the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## Project priorities
 
@@ -24,7 +24,7 @@ Two Flatpaks are distributed through [GitHub Releases](https://github.com/hasanm
 
 - [Installation](Installation.md) — installation methods and prerequisites.
 - [Uninstallation](Uninstallation.md) — removing Shanti and its user-local integration.
-- [Input Methods](Input-Methods.md) — IBus/Fcitx5 selection and integration notes.
+- [Input Methods](Input-Methods.md) — GNOME IBus integration notes.
 - [Troubleshooting](Troubleshooting.md) — known issues and diagnostic steps.
 
 ### Implementation and contribution

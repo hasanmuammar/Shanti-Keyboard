@@ -1,7 +1,7 @@
 //! Engine core for the Shanti rewrite (see `docs/REWRITE-PLAN.md` phase 2):
 //! settings application, the key-event state machine, suggestion handling
 //! and the riti session, extracted from the IBus engine's `main.cpp` so the
-//! platform shells reduce to libibus/Fcitx5 plumbing.
+//! the platform shell reduces to libibus plumbing.
 //!
 //! The C ABI that the C++ shells consume lives in `ffi.rs`
 //! (`include/shanti-core.h`); the Rust-side state machine in `engine.rs`;

@@ -19,7 +19,7 @@ build_shanti() {
             sudo_cmd=sudo
         fi
 
-        deps_stamp="/var/lib/shanti-builder/deps-v3-$OBK_BACKEND"
+        deps_stamp="/var/lib/shanti-builder/deps-v4-ibus"
 
         if [[ ! -f "$deps_stamp" ]]; then
             if command -v apt-get >/dev/null 2>&1; then
@@ -33,22 +33,14 @@ build_shanti() {
 
                 $sudo_cmd update-ca-certificates
 
-                if [[ "$OBK_BACKEND" == ibus ]]; then
-                    $sudo_cmd apt-get install -y --no-install-recommends libibus-1.0-dev
-                else
-                    $sudo_cmd apt-get install -y --no-install-recommends libfcitx5core-dev
-                fi
+                $sudo_cmd apt-get install -y --no-install-recommends libibus-1.0-dev
             elif command -v dnf >/dev/null 2>&1; then
                 $sudo_cmd dnf install -y \
                     gcc gcc-c++ cmake ninja-build pkgconf-pkg-config \
                     rust cargo libzstd-devel \
                     qt5-qtbase-devel qt5-qtsvg-devel ca-certificates curl
 
-                if [[ "$OBK_BACKEND" == ibus ]]; then
-                    $sudo_cmd dnf install -y ibus-devel
-                else
-                    $sudo_cmd dnf install -y fcitx5-devel
-                fi
+                $sudo_cmd dnf install -y ibus-devel
 
                 if command -v update-ca-trust >/dev/null 2>&1; then
                     $sudo_cmd update-ca-trust
@@ -74,21 +66,6 @@ build_shanti() {
         export SSL_CERT_FILE="$ca_bundle"
         export CARGO_HTTP_CAINFO="$ca_bundle"
 
-        case "$OBK_BACKEND" in
-            ibus)
-                ibus=ON
-                fcitx=OFF
-                ;;
-            fcitx)
-                ibus=OFF
-                fcitx=ON
-                ;;
-            *)
-                echo "Unsupported input-method backend: $OBK_BACKEND" >&2
-                exit 1
-                ;;
-        esac
-
         source_dir="$OBK_WORKSPACE"
         build_dir="$OBK_BUILD"
         stage_dir="$OBK_STAGE"
@@ -111,8 +88,7 @@ build_shanti() {
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
             -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib/shanti \
-            -DENABLE_IBUS="$ibus" \
-            -DENABLE_FCITX="$fcitx" \
+            -DENABLE_IBUS=ON \
             -DCMAKE_EXE_LINKER_FLAGS=-Wl,--disable-new-dtags \
             -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--disable-new-dtags
 

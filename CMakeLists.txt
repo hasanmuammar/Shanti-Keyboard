@@ -17,16 +17,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(cmake/corrosion-rs)
 # Qt5 is only needed by the settings GUI (src/frontend + src/shared); the
-# engine plugins are Qt-free since rewrite phase 2. The Fcitx5 Flatpak
-# addon builds with -DBUILD_FRONTEND=OFF inside the Fcitx5 runtime, which
-# has no Qt5.
+# IBus engine is Qt-free since rewrite phase 2.
 option(BUILD_FRONTEND "Build the Qt5 settings GUI" ON)
 if(BUILD_FRONTEND)
     find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
 endif()
 
-# Rust crates shared by the engine plugins (shanti-config, shanti-paths);
-# imported as CMake targets so the engines can link them directly.
+# Rust crates used by the IBus engine (shanti-config, shanti-paths); imported
+# as CMake targets so the engine can link them directly.
 add_subdirectory(crates)
 
 if(BUILD_FRONTEND)
@@ -63,26 +61,14 @@ add_definitions(-DLIBEXECDIR="${LIBEXECDIR}")
 include(FindPkgConfig)
 find_package(PkgConfig REQUIRED)
 
-option(ENABLE_IBUS "Enable IBus support" OFF)
-option(ENABLE_FCITX "Enable Fcitx5 support" OFF)
-
-if(ENABLE_IBUS AND ENABLE_FCITX)
-    message(FATAL_ERROR "Enable only one input-method backend.")
-endif()
-
-if(NOT ENABLE_IBUS AND NOT ENABLE_FCITX)
-    message(FATAL_ERROR "Enable either ENABLE_IBUS or ENABLE_FCITX.")
+option(ENABLE_IBUS "Enable IBus support" ON)
+if(NOT ENABLE_IBUS)
+    message(FATAL_ERROR "This branch supports IBus only.")
 endif()
 
 pkg_check_modules(ZSTD REQUIRED libzstd)
 
-if(ENABLE_IBUS)
-    pkg_check_modules(IBUS REQUIRED ibus-1.0)
-endif()
-
-if(ENABLE_FCITX)
-    find_package(Fcitx5Core 5.0.5 REQUIRED)
-endif()
+pkg_check_modules(IBUS REQUIRED ibus-1.0)
 
 add_subdirectory(src/engine)
 add_subdirectory(src/platform)

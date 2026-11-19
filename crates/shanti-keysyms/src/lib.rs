@@ -1,10 +1,9 @@
 //! Single source of truth for the key event keysym -> riti virtual-key
-//! mapping, shared by the IBus engine and the Fcitx5 engine.
+//! mapping used by the IBus engine.
 //!
-//! Before this crate each engine carried its own 112-entry table in its
-//! `keycode.h`. The two tables were extracted, verified byte-identical
-//! against each other *and* against the real IBus/Fcitx keysym enums (see
-//! `generator/keysyms_extract.py`), and reduced to `data/keysyms.tsv`
+//! Before this crate the IBus engine carried a 112-entry table in its
+//! `keycode.h`. The mapping was verified against the real IBus keysym enums
+//! (see `generator/keysyms_extract.py`) and reduced to `data/keysyms.tsv`
 //! (committed source of truth) and `data.rs` (generated, sorted array).
 //!
 //! The table stores riti virtual-key *names* (`VC_*`). Numeric values are
@@ -18,13 +17,13 @@ use std::sync::OnceLock;
 
 // Generated from data/keysyms.tsv by generator/keysyms_extract.py - do not
 // edit. Sorted ascending by keysym value; values are the same in the IBus
-// and Fcitx keysym enums (verified).
+// IBus keysyms.
 include!("data.rs");
 
 const RITI_HEADER: &str = include_str!("../../../src/engine/riti/include/riti.h");
 
 /// Fallback for `VC_UNKNOWN`, which riti's generated header does not define.
-/// Both engine `keycode.h` files historically used this exact constant; the
+/// The original engine `keycode.h` used this exact constant; the
 /// tests assert it stays in agreement if riti ever starts defining the name.
 pub const VC_UNKNOWN_FALLBACK: u16 = 0x0046;
 
@@ -74,8 +73,7 @@ fn vc_unknown() -> u16 {
 
 /// Map a key event keysym to a riti virtual-key number.
 ///
-/// Keysym values are identical in the IBus and Fcitx enums (both follow X
-/// keysyms), so a single table serves both engines. Unmapped keysyms fall
+/// IBus keysyms follow the X keysym values. Unmapped keysyms fall
 /// back to `VC_UNKNOWN`, matching the previous per-engine behaviour.
 pub fn lookup(keysym: u32) -> u16 {
     match KEYSYMS.binary_search_by(|entry| entry.0.cmp(&keysym)) {

@@ -3,7 +3,7 @@
 This directory contains the fork-specific Linux source-build, runtime-bundling and user-local installation implementation. The normal installer downloads prebuilt releases and does not use this build environment.
 
 - `common.sh` defines user-local paths and cache locations.
-- `environment.sh` selects IBus or Fcitx5 and chooses Toolbx, Distrobox, Podman, or Docker.
+- `environment.sh` selects IBus and chooses Toolbx, Distrobox, Podman, or Docker.
 - `build.sh` installs build dependencies inside the selected environment, configures CMake, builds the selected backend, stages the installation, and prepares bundled Qt/runtime libraries.
 - `bundle-runtime.sh` handles the Linux shared-library closure and runtime modules such as the libproxy backend.
 - `install.sh` copies the staged tree into the user-local prefix and registers the selected input method.

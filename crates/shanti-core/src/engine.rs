@@ -1,9 +1,9 @@
-//! Engine state machine for the Shanti IBus/Fcitx5 engines.
+//! Engine state machine for the Shanti IBus engine.
 //!
 //! This is the port of the former `src/engine/ibus/main.cpp` engine logic:
 //! settings application (`update_with_settings`), the key-event state
 //! machine (`engine_process_key`), selection tracking and commit handling.
-//! The platform shell (libibus / Fcitx5 lib calls) stays in C++ and renders
+//! The platform shell (libibus calls) stays in C++ and renders
 //! whatever this core decides, through the C ABI in `ffi.rs`.
 
 use riti::config::Config;
@@ -14,7 +14,7 @@ use shanti_keysyms::VC_UNKNOWN_VALUE;
 use crate::settings;
 
 /// X keysyms the state machine reacts to. These are stable, platform-wide
-/// constants: the IBus and Fcitx enums both follow X keysym values
+/// constants: IBus keysyms follow X keysym values
 /// (verified by the keysym single-sourcing probe, 112/112).
 mod keysym {
     pub const SPACE: u32 = 0x0020;
@@ -185,10 +185,10 @@ impl ShantiCore {
         self.ctx.ongoing_input_session()
     }
 
-    /// A mouse click on candidate `index` (IBus `candidate-clicked` / Fcitx
+    /// A mouse click on candidate `index` (IBus `candidate-clicked`)
     /// candidate selection). Commits the *pre-edit text* at `index` — with
     /// ANSI encoding enabled this is the encoded (Bijoy) text, matching the
-    /// old Fcitx engine's commit semantics.
+    /// original engine's commit semantics.
     pub fn candidate_clicked(&mut self, index: usize) -> KeyAction {
         self.last_committed = self
             .suggestion

@@ -3,7 +3,7 @@ name = "shanti-core"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
-description = "Engine core for the Shanti rewrite: settings application, key-event state machine, suggestion handling and the riti session, shared by the IBus and Fcitx5 engine shells."
+description = "Engine core for the Shanti rewrite: settings application, key-event state machine, suggestion handling and the riti session used by the IBus engine."
 publish = false
 
 [lib]

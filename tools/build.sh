@@ -19,7 +19,7 @@ Usage: tools/build.sh [options]
 Build Shanti Keyboard from source.
 
 Options:
-  --backend BACKEND   Build IBus or Fcitx5. Default: detect from desktop.
+  --backend ibus      Build the IBus engine (the only backend in this branch).
   --package           Create a prebuilt Linux release archive in ./dist
                       instead of installing the build locally.
   -y, --yes           Do not ask before creating a temporary build environment.
@@ -30,7 +30,7 @@ EOF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --backend)
-            [[ $# -ge 2 ]] || die "--backend requires ibus or fcitx."
+            [[ $# -ge 2 ]] || die "--backend requires ibus."
             REQUESTED_BACKEND="$2"
             shift 2
             ;;
@@ -52,13 +52,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-case "$REQUESTED_BACKEND" in
-    ""|ibus|fcitx)
-        ;;
-    *)
-        die "Unsupported backend: $REQUESTED_BACKEND. Use ibus or fcitx."
-        ;;
-esac
+[[ -z "$REQUESTED_BACKEND" || "$REQUESTED_BACKEND" == ibus ]] ||
+    die "Unsupported backend: $REQUESTED_BACKEND. This branch supports IBus only."
 
 main() {
     require_linux

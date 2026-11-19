@@ -1,6 +1,5 @@
 # Single source of keysym mapping (phase-2 task 1).
-# Extracted from src/engine/{ibus,fcitx}/keycode.h, verified identical on both
-# platforms and probed against the real IBus/Fcitx enums (see generator/keysyms_extract.py).
+# IBus keysym mapping probed against the real IBus enums (see generator/keysyms_extract.py).
 # columns: keysym_value(X keysyms, decimal)	keysym_name	riti_virtual_key
 33	exclam	VC_EXCLAIM
 34	quotedbl	VC_QUOTE

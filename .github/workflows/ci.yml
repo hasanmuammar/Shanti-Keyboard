@@ -65,69 +65,6 @@ jobs:
           path: shanti-ibus-${{ matrix.arch }}.flatpak
           if-no-files-found: error
 
-  build-flatpak-fcitx:
-    # Self-contained Fcitx5 app (org.shanti.ShantiFcitx5): Flathub's
-    # published org.fcitx.Fcitx5 app is the manifest base, so one bundle
-    # carries the whole sandboxed Fcitx5 stack plus the Shanti engine.
-    # See tools/flatpak/fcitx-app.yml.
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-24.04
-            arch: x86_64
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-
-    runs-on: ${{ matrix.runner }}
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Install Flatpak build tools
-        # Ubuntu 24.04's apt flatpak (1.14) predates the
-        # inherit-wayland-socket finish-arg and ships old flatpak-builder;
-        # use the Flatpak team's stable PPA for current versions.
-        run: |
-          sudo add-apt-repository -y ppa:flatpak/stable
-          sudo apt-get update -qq
-          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
-
-      - name: Configure Flathub remote
-        run: |
-          flatpak remote-add --user --if-not-exists flathub \
-            https://dl.flathub.org/repo/flathub.flatpakrepo
-
-      - name: Build Flatpak bundle
-        env:
-          FLATPAK_ARCH: ${{ matrix.arch }}
-          # Use the distro AppStream tools: a Homebrew appstream on PATH may
-          # lack the appstream-compose helper flatpak-builder needs to finish.
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        run: |
-          flatpak-builder --disable-rofiles-fuse --force-clean --user \
-            --default-branch=stable \
-            --install-deps-from=flathub \
-            --repo=flatpak-repo-fcitx \
-            build-dir-fcitx tools/flatpak/fcitx-app.yml
-          flatpak build-bundle --arch="$FLATPAK_ARCH" \
-            flatpak-repo-fcitx "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
-            org.shanti.ShantiFcitx5 stable
-          sha256sum "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
-            > "shanti-fcitx5-${FLATPAK_ARCH}.flatpak.sha256"
-
-      - name: Upload Flatpak bundle
-        uses: actions/upload-artifact@v5
-        with:
-          name: shanti-fcitx5-flatpak-${{ matrix.arch }}
-          path: |
-            shanti-fcitx5-${{ matrix.arch }}.flatpak
-            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
-          if-no-files-found: error
-
   build-linux:
     strategy:
       fail-fast: false
@@ -135,24 +72,8 @@ jobs:
         include:
           - runner: ubuntu-24.04
             arch: x86_64
-            cc: gcc
-            cxx: g++
-            backend: ibus
-          - runner: ubuntu-24.04
-            arch: x86_64
-            cc: gcc
-            cxx: g++
-            backend: fcitx
           - runner: ubuntu-24.04-arm
             arch: aarch64
-            cc: gcc
-            cxx: g++
-            backend: ibus
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-            cc: gcc
-            cxx: g++
-            backend: fcitx
 
     runs-on: ${{ matrix.runner }}
 
@@ -178,26 +99,13 @@ jobs:
             qtbase5-dev-tools \
             libqt5svg5-dev \
             libibus-1.0-dev \
-            libfcitx5core-dev \
             ca-certificates
 
       - name: Configure
-        env:
-          CC: ${{ matrix.cc }}
-          CXX: ${{ matrix.cxx }}
-          BACKEND: ${{ matrix.backend }}
         run: |
-          if [ "$BACKEND" = "ibus" ]; then
-            cmake -S . -B build -G Ninja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DENABLE_IBUS=ON \
-              -DENABLE_FCITX=OFF
-          else
-            cmake -S . -B build -G Ninja \
-              -DCMAKE_BUILD_TYPE=Release \
-              -DENABLE_IBUS=OFF \
-              -DENABLE_FCITX=ON
-          fi
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_IBUS=ON
 
       - name: Build
         run: cmake --build build --parallel 2

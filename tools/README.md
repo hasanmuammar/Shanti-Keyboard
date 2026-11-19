@@ -22,7 +22,7 @@ The portable installer is the primary installation path for this fork.
 
 ## External build and desktop projects
 
-The installer integrates with [Toolbx](https://github.com/containers/toolbox), [Distrobox](https://github.com/89luca89/distrobox), [Podman](https://github.com/containers/podman) or [Docker](https://github.com/moby/moby) for isolated builds, and with [IBus](https://github.com/ibus/ibus) or [Fcitx5](https://github.com/fcitx/fcitx5) for Linux input-method integration.
+The installer integrates with [Toolbx](https://github.com/containers/toolbox), [Distrobox](https://github.com/89luca89/distrobox), [Podman](https://github.com/containers/podman) or [Docker](https://github.com/moby/moby) for isolated builds, and with [IBus](https://github.com/ibus/ibus) for GNOME input-method integration.
 
 ## Source builds
 

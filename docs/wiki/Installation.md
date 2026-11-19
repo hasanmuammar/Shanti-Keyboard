@@ -2,16 +2,6 @@
 
 Choose the method that matches your desktop:
 
-## KDE Plasma / Kinoite: Fcitx5 Flatpak
-
-Download the Fcitx5 bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). It is a self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`) — the Fcitx5 stack, our engine and the same `shanti-gui` settings app as the IBus bundle come as one bundle. No host Fcitx5 is needed:
-
-```bash
-flatpak install --user ./shanti-fcitx5-x86_64.flatpak
-```
-
-Then add **Shanti Keyboard** with the bundled `fcitx5-configtool`, set the engine options in the bundled **Shanti Keyboard (Fcitx5)** GUI, and set up a login autostart entry so the daemon runs at boot. All steps are shown in the [Flatpak guide](../../tools/flatpak/README.md).
-
 ## GNOME: IBus Flatpak
 
 Download the IBus Flatpak bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). Flatpak needs a Flathub remote in the same scope as the app. For a per-user install, add the user remote if needed:
@@ -40,7 +30,7 @@ Release assets are Flatpak-only; the portable model remains available as a
 bash tools/install.sh
 ```
 
-It downloads the release selected in `release-tag.txt`, checks its SHA-256 checksum and installs for the current user. KDE Plasma selects Fcitx5; GNOME and other desktops select IBus. To choose a release explicitly:
+It downloads the release selected in `release-tag.txt`, checks its SHA-256 checksum and installs for the current user. This branch supports IBus. To choose a release explicitly:
 
 ```bash
 bash tools/install.sh --version shanti-alpha.1

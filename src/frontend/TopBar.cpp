@@ -38,7 +38,6 @@
 #include "AutoCorrectDialog.h"
 #include "PlatformConfig.h"
 #include "FlatpakIbusIntegration.h"
-#include "FcitxIntegration.h"
 #include "FileSystem.h"
 #include "ui_TopBar.h"
 
@@ -97,7 +96,6 @@ TopBar::TopBar(bool darkIcon, QWidget *parent) :
   DataMigration();
   notifyTrayStart(tray);
   FlatpakIbusIntegration::checkAndPrompt(this);
-  FcitxIntegration::checkAndPrompt(this);
 }
 
 
@@ -249,13 +247,6 @@ void TopBar::SetupTrayIcon() {
       FlatpakIbusIntegration::showManagementDialog(this);
     });
     trayMenu->addAction(ibusIntegration);
-  }
-  if (FcitxIntegration::isApplicable()) {
-    QAction *fcitxIntegration = new QAction("Fcitx5 Integration…", this);
-    connect(fcitxIntegration, &QAction::triggered, this, [this]() {
-      FcitxIntegration::showManagementDialog(this);
-    });
-    trayMenu->addAction(fcitxIntegration);
   }
   trayMenu->addSeparator();
   trayMenu->addAction(trayTopBarVisibility);

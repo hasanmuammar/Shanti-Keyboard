@@ -1,19 +1,18 @@
 # shanti-keysyms
 
 Single source of truth for the key event **keysym → riti virtual-key**
-mapping shared by the IBus engine and the Fcitx5 engine. Replaces the two
-112-entry tables that used to live in the engines' `keycode.h` headers.
+mapping used by the IBus engine. Replaces the 112-entry table that used to
+live in the engine's `keycode.h` header.
 
 ## Layout
 
 - `data/keysyms.tsv` — committed source of truth: `keysym_value`, `keysym_name`, `VC_*` name.
 - `src/data.rs` — generated from the TSV, sorted array of `(keysym_value, VC_* name)`.
 - `src/lib.rs` — Rust lookup (`pub fn lookup`) + C ABI `shanti_keysyms_lookup`
-  (`include/shanti-keysyms.h`), C++ engines link this; unknown keysyms map to
-  `VC_UNKNOWN` (0x0046, the engines' historical fallback).
-- `generator/keysyms_extract.py` — regeneration script (needs IBus + Fcitx5
-  dev headers to probe the real enums; asserts engine tables, IBus enum, and
-  Fcitx enum all agree, and that keysym values are unique).
+  (`include/shanti-keysyms.h`), the C++ engine links this; unknown keysyms map
+  to `VC_UNKNOWN` (0x0046, the engine's historical fallback).
+- `generator/keysyms_extract.py` — regeneration script (needs IBus dev headers
+  to probe real enum values and verify that keysym values are unique).
 
 ## Why names, not numbers
 
@@ -30,5 +29,5 @@ crates/shanti-keysyms/generator/keysyms_extract.py --diff
 cargo test  # in this crate; asserts TSV ↔ data.rs ↔ riti.h consistency
 ```
 
-Then rebuild the engines (`bash tools/build.sh --backend ibus --package` and
-`--backend fcitx`) and re-verify typing behaviour before committing.
+Then rebuild the IBus engine (`bash tools/build.sh --backend ibus --package`)
+and re-verify typing behaviour before committing.

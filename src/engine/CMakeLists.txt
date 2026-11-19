@@ -6,10 +6,4 @@ corrosion_import_crate(
     CRATES riti
 )
 
-if(ENABLE_IBUS)
-    add_subdirectory(ibus)
-endif()
-
-if(ENABLE_FCITX)
-    add_subdirectory(fcitx)
-endif()
+add_subdirectory(ibus)

@@ -1,6 +1,6 @@
 /*  Shanti engine core — C ABI of the shanti-core crate
  *  (crates/shanti-core): the engine state machine shared by the IBus and
- *  Fcitx5 engine shells. This header is hand-written on purpose; keep it in
+ *  IBus engine shell. This header is hand-written on purpose; keep it in
  *  sync with src/ffi.rs.
  *
  *  Copyright (C) 2026 Shanti contributors

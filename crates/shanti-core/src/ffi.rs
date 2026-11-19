@@ -1,4 +1,4 @@
-//! C ABI consumed by the C++ IM platform shells (libibus / Fcitx5). Follows
+//! C ABI consumed by the C++ libibus shell. Follows
 //! the shanti-config convention: owned `char*` results freed with
 //! [`shanti_core_string_free`], opaque handles, hand-written header
 //! (`include/shanti-core.h`).

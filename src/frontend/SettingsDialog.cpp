@@ -30,7 +30,6 @@
 #include "Settings.h"
 #include "AutoCorrectDialog.h"
 #include "FlatpakIbusIntegration.h"
-#include "FcitxIntegration.h"
 #include "ToggleSwitch.h"
 
 SettingsDialog::SettingsDialog(bool darkMode, QWidget *parent) :
@@ -39,9 +38,7 @@ SettingsDialog::SettingsDialog(bool darkMode, QWidget *parent) :
     autoCorrectDialog(nullptr),
     m_darkMode(darkMode),
     ibusIntegrationStatus(nullptr),
-    ibusIntegrationRemoveButton(nullptr),
-    fcitxIntegrationStatus(nullptr),
-    fcitxIntegrationRemoveButton(nullptr) {
+    ibusIntegrationRemoveButton(nullptr) {
   ui->setupUi(this);
   autoCorrectDialog = new AutoCorrectDialog(m_darkMode, this);
 
@@ -68,30 +65,6 @@ SettingsDialog::SettingsDialog(bool darkMode, QWidget *parent) :
     connect(ibusIntegrationRemoveButton, &QPushButton::clicked, this, [this]() {
       FlatpakIbusIntegration::remove(this);
       updateIbusIntegrationStatus();
-    });
-  }
-
-  if (FcitxIntegration::isApplicable()) {
-    auto *integrationGroup = new QGroupBox("Fcitx5 Integration", this);
-    auto *integrationLayout = new QHBoxLayout(integrationGroup);
-    fcitxIntegrationStatus = new QLabel(integrationGroup);
-    fcitxIntegrationStatus->setWordWrap(true);
-    auto *setupButton = new QPushButton("Set up / repair", integrationGroup);
-    fcitxIntegrationRemoveButton = new QPushButton("Remove integration", integrationGroup);
-    integrationLayout->addWidget(fcitxIntegrationStatus, 1);
-    integrationLayout->addWidget(setupButton);
-    integrationLayout->addWidget(fcitxIntegrationRemoveButton);
-    integrationGroup->setMinimumHeight(78);
-    ui->pageGeneralLayout->insertWidget(1, integrationGroup);
-    resize(width(), height() + 88);
-
-    connect(setupButton, &QPushButton::clicked, this, [this]() {
-      FcitxIntegration::setupOrRepair(this);
-      updateFcitxIntegrationStatus();
-    });
-    connect(fcitxIntegrationRemoveButton, &QPushButton::clicked, this, [this]() {
-      FcitxIntegration::remove(this);
-      updateFcitxIntegrationStatus();
     });
   }
 
@@ -205,7 +178,6 @@ void SettingsDialog::updateSettings() {
   ui->btnNumberpad->setChecked(gSettings->getNumberPadFixed());
 
   updateIbusIntegrationStatus();
-  updateFcitxIntegrationStatus();
 }
 
 void SettingsDialog::updateIbusIntegrationStatus() {
@@ -213,13 +185,6 @@ void SettingsDialog::updateIbusIntegrationStatus() {
     return;
   ibusIntegrationStatus->setText(FlatpakIbusIntegration::statusText());
   ibusIntegrationRemoveButton->setEnabled(FlatpakIbusIntegration::canRemove());
-}
-
-void SettingsDialog::updateFcitxIntegrationStatus() {
-  if (!fcitxIntegrationStatus)
-    return;
-  fcitxIntegrationStatus->setText(FcitxIntegration::statusText());
-  fcitxIntegrationRemoveButton->setEnabled(FcitxIntegration::canRemove());
 }
 
 void SettingsDialog::saveSettings() {

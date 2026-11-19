@@ -36,11 +36,10 @@ body:
     id: input-method
     attributes:
       label: Input Method Framework
-      description: Which input method framework are you using? (e.g., IBus, Fcitx)
+      description: Which IBus version or desktop session are you using?
       multiple: true
       options:
         - IBus
-        - Fcitx
         - Other (please specify in Additional Context)
     validations:
       required: true
