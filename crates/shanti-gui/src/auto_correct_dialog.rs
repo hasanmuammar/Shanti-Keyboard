@@ -126,7 +126,7 @@ impl AutoCorrectDialog {
         let replace = dialog.replace_entry.clone();
         let with = dialog.with_entry.clone();
         let preview_replace = dialog.preview_replace.clone();
-        let preview_with = dialog.preview_with.clone();
+        let _preview_with = dialog.preview_with.clone();
         let update_btn_c = update_btn.clone();
         let clear_btn_c = clear_btn.clone();
         let preview_c = Rc::clone(&preview);

@@ -22,6 +22,9 @@ jobs:
             arch: aarch64
 
     runs-on: ${{ matrix.runner }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
+      options: --privileged
 
     steps:
       - name: Checkout source
@@ -29,25 +32,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Flatpak build tools
-        # Ubuntu 24.04's apt flatpak (1.14) predates the
-        # inherit-wayland-socket finish-arg and ships old flatpak-builder;
-        # use the Flatpak team's stable PPA for current versions.
-        run: |
-          sudo add-apt-repository -y ppa:flatpak/stable
-          sudo apt-get update -qq
-          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
-
-      - name: Configure Flathub remote
-        run: |
-          flatpak remote-add --user --if-not-exists flathub \
-            https://dl.flathub.org/repo/flathub.flatpakrepo
-
       - name: Build Flatpak bundle
-        env:
-          # Use the distro AppStream tools: a Homebrew appstream on PATH may
-          # lack the appstream-compose helper flatpak-builder needs to finish.
-          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
             --default-branch=stable \
