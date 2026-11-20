@@ -171,7 +171,11 @@ impl LayoutViewer {
         // gdk-pixbuf 0.20 (direct dep) and gtk4's gdk-pixbuf 0.21 are different
         // Rust types wrapping the same C GdkPixbuf pointer; borrow the pointer
         // to construct gtk4's Pixbuf for Picture::for_pixbuf.
-        let stash = pixbuf.to_glib_none();
+        let stash: gdk_pixbuf::glib::translate::Stash<
+            '_,
+            *mut <gdk_pixbuf::Pixbuf as gdk_pixbuf::glib::translate::GlibPtrDefault>::GlibType,
+            gdk_pixbuf::Pixbuf,
+        > = pixbuf.to_glib_none();
         let pixbuf = unsafe { gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(&(stash.0 as *mut _)) };
         let picture = Picture::for_pixbuf(pixbuf);
         picture.set_hexpand(true);
