@@ -1,4 +1,4 @@
-include_directories(../../shared ${IBUS_INCLUDE_DIRS}
+include_directories(${IBUS_INCLUDE_DIRS}
     "${CMAKE_SOURCE_DIR}/crates/shanti-paths/include"
     "${CMAKE_SOURCE_DIR}/crates/shanti-core/include")
 add_executable(ibus-engine-shanti main.cpp)
