@@ -32,7 +32,14 @@ jobs:
         with:
           submodules: recursive
 
-      
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-delete --user flathub 2>/dev/null || true
+          flatpak remote-add --user flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak update --user --appstream
+          flatpak remotes --user
+          flatpak remote-ls --user flathub
 
       - name: Build Flatpak bundle
         run: |
