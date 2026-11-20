@@ -2,7 +2,9 @@ use std::rc::Rc;
 
 use crate::auto_correct_dialog::AutoCorrectDialog;
 use adw::prelude::*;
-use adw::{ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow, ToggleSwitch};
+use adw::{
+    ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow, ToggleSwitch,
+};
 use gtk::{prelude::*, Button};
 use shanti_config::Settings;
 
