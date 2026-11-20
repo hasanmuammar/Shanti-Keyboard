@@ -1,0 +1,5 @@
+#!/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b/bin/python3.14
+
+from idlelib.pyshell import main
+if __name__ == '__main__':
+    main()

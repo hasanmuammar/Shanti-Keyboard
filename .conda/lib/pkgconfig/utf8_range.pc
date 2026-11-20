@@ -1,0 +1,11 @@
+prefix=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b
+exec_prefix=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b
+libdir=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b/lib
+includedir=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b/include
+
+Name: UTF8 Range
+Description: Google's UTF8 Library
+Version: 1.0
+Requires: absl_strings
+Libs: -L${libdir} -lutf8_validity -lutf8_range -pthread
+Cflags: -I${includedir}

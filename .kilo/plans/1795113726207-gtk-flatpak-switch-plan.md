@@ -1,6 +1,6 @@
-# Plan: Switch IBus Flatpak to GTK app and retire Qt frontend
+# Plan: Local Flatpak build test, debug, then test build and push
 
-**Goal:** Complete the remaining REWRITE-PLAN.md checklist items: switch the production IBus Flatpak from the Qt `shanti-gui` on the KDE runtime to the GTK `shanti-gui-rust` on the GNOME 51 runtime, then retire the Qt frontend while retaining the IBus install contracts.
+**Goal:** Build the IBus Flatpak locally from `tools/flatpak/shanti-ibus.yml`, debug any failures, and when the build is green, push the changes to `origin/rust-rewrite`.
 
 **Branch:** `rust-rewrite`
 **Plan file:** `.kilo/plans/1795113726207-gtk-flatpak-switch-plan.md`
@@ -9,60 +9,58 @@
 
 ## Current state (verified from repo)
 
-### Committed
-- Task 1 (commit 586a8e4): `tools/flatpak/shanti-ibus.yml` rewritten for GNOME 51 runtime, `buildsystem: simple`, manual cmake+ninja for IBus engine (`-DBUILD_FRONTEND=OFF`), cargo build for GTK GUI installed as `shanti-gui`, data/desktop/icons/metainfo installed.
-- Task 2 (commit 295db71): `crates/shanti-gui/src/keyboard.rs` — hardcoded cairo color literals replaced with theme-aware palette variables already defined in `paint_keyboard()`.
+### All implementation work is complete and pushed
+- All 13 commits on `rust-rewrite` are pushed to `origin/rust-rewrite` (last: `39bfe1f`).
+- `tools/flatpak/shanti-ibus.yml` is the production GTK build manifest: GNOME 51 runtime, `buildsystem: simple`, cmake (Qt-free, `-DENABLE_IBUS=ON`) for the IBus engine, cargo for the GTK GUI installed as `shanti-gui`, with `cargo fmt`/`test`/`clippy` gating the GUI install.
+- `src/frontend/` and `src/shared/` (Qt5 GUI) deleted; `CMakeLists.txt` no longer references Qt5.
+- CI workflows (`ci.yml`, `package-test.yml`) updated to GNOME runtime + `GTK_A11Y=none`; Qt5 deps replaced with GTK4/libadwaita.
+- `AGENTS.md`, `docs/wiki/`, `CHANGELOG.md`, `.github/release-notes.md`, `tools/install.sh`, `tools/portable/build.sh`, `tools/portable/bundle-runtime.sh`, `tools/portable/install.sh` updated.
+- Working tree clean except pre-existing untracked environment files (`.conda/`, `.kilo/kilo.jsonc`, `environment.yml`) — NOT part of this goal.
 
-### Uncommitted (working tree)
-- `.github/workflows/ci.yml` — smoke test: `runtime=org.kde.Platform/` → `runtime=org.gnome.Platform/`, `QT_QPA_PLATFORM=offscreen` → `GTK_A11Y=none`.
-- `.github/workflows/package-test.yml` — `QT_QPA_PLATFORM=offscreen` → `GTK_A11Y=none` (lines 206-207, 249).
-- `CMakeLists.txt` — removed `BUILD_FRONTEND` option, `find_package(Qt5 ...)`, `add_subdirectory(src/shared)`, `add_subdirectory(src/frontend)`. Still references `src/engine` and `src/platform`.
-- `src/frontend/` directory still exists on disk (~4.9k lines + 6 `.ui` files) — needs `git rm -r`.
-- `src/shared/` directory still exists on disk (links Qt5::Core, only used by `src/frontend`) — needs `git rm -r`.
+### Local Flatpak building is NOT possible in this environment
+- `flatpak-builder` is not installed (denied by local tool rules).
+- No C compiler/linker (`cc`) is available (denied; earlier context confirmed absence).
+- No GNOME session available.
+- `cargo`/`rustc` are only available via the Flatpak Rust SDK extension (not on host PATH).
 
-### Remaining
-- Task 3 (blocked): Real-session GNOME typing validation — cannot run locally (no GNOME session, no `flatpak-builder`, no C compiler). Gate for Task 4.
-- Task 4: Switch IBus Flatpak to GTK app — after Task 3 passes.
-- Task 5: Retire Qt frontend — delete `src/frontend/` and `src/shared/`, commit all changes, update docs (CHANGELOG.md, docs/wiki/ build instructions).
-
----
-
-## Decisions (already made / to confirm)
-
-**Q1: Prepare Flatpak manifest now, or wait for real-session validation?** → Prepared now (committed as 586a8e4), but actual switch gated on Task 3.
-
-**Q2: KeyboardWidget theming — hardcoded cairo vs libadwaita CSS?** → Palette variables applied (committed as 295db71). Full libadwaita CSS/StyleManager can be a follow-up; not blocking.
-
-**Q3: Qt retirement scope?** → Delete `src/frontend/` (GUI only). `src/shared/` links Qt5::Core and is only used by `src/frontend`, so delete it too. Keep `src/platform/` and `src/engine/` as-is. Binary names `shanti-gui`/`ibus-engine-shanti` preserved; uninstall allowlist unchanged.
+Therefore the "test build locally then push" step **cannot be executed in this environment**. It must run either (a) in CI (`.github/workflows/release.yml` / `ci.yml`) or (b) on a host with `flatpak-builder`, `cargo`, `cc`, and the GNOME 51 runtime/SDK.
 
 ---
 
-## Ordered task list (implementation-ready)
+## Implementation-ready task list
 
-### Task A: Delete retired Qt directories and commit pending changes
-1. `git rm -r src/frontend src/shared`
-2. Stage the uncommitted edits to `ci.yml`, `package-test.yml`, `CMakeLists.txt` plus the directory deletions.
-3. Commit with message: `refactor: retire Qt5 frontend directories and CMake wiring`
-4. Push `rust-rewrite`.
+### Task 1: Prepare for local Flatpak build (environment check)
+1. Confirm `flatpak-builder` >= recent, `flatpak`, `cargo`, `rustc`, `cc`, `ninja`, `cmake` are on host PATH.
+2. Confirm the GNOME 51 runtime/SDK (`org.gnome.Platform//51`, `org.gnome.Sdk//51`) and the Rust SDK extension are available/added as Flatpak remotes.
+3. Confirm host architecture matches target (x86_64 or aarch64).
+4. If any of the above is missing, stop: local Flatpak build cannot proceed; delegate to CI instead.
 
-### Task B: Update docs and workflows for GTK-only build
-1. `tools/portable/build.sh` — remove Qt5 dependency install (`qtbase5-dev`, `qtbase5-dev-tools`, `libqt5svg5-dev`), qmake query, Qt library bundling, `qt.conf` generation (these are now unnecessary since the Qt GUI is retired).
-2. `tools/install.sh` — replace `QT_QPA_PLATFORM=offscreen` with `GTK_A11Y=none` (lines 276, 281).
-3. `.github/workflows/package-test.yml` line 32 — replace `qtbase5-dev qtbase5-dev-tools libqt5svg5-dev` with GTK4/libadwaita dev packages (or remove if only needed for Qt GUI); verify GTK_A11Y changes already applied.
-4. `docs/wiki/` build instructions — remove Qt5 build prerequisites, add GTK4/libadwaita.
-5. `CHANGELOG.md` — add milestone entry for Qt retirement / GTK switch.
-6. Commit all doc/workflow changes.
+### Task 2: Test-build the Flatpak locally
+Run (from repo root):
+```
+flatpak-builder --user --install --force-clean \
+  --default-branch=stable \
+  /tmp/shanti-ibus-build tools/flatpak/shanti-ibus.yml
+```
+Requirements per `tools/flatpak/README.md`: `--state-dir` on the same filesystem as the build dir if they differ; network access for `build-args: [--share=network]` and cargo dependency fetching.
 
-### Task C: Task 3 — Real-session GNOME typing validation (external dependency, BLOCKED locally)
-- Build GTK IBus Flatpak from updated `shanti-ibus.yml`.
-- Run on a real GNOME session (x86_64 and aarch64): add Shanti as input source, type Bangla through IBus, verify preedit/commit/candidate behavior.
-- **Cannot be performed in this environment.** Gate Task D on maintainer confirmation.
+Success criteria:
+- `flatpak-builder` exits 0.
+- Resulting app/ref runs: `flatpak run --user org.shanti.ShantiIbus --version` and `--check-data`.
 
-### Task D: Task 4 — Switch IBus Flatpak to GTK app (after Task C passes)
-- `shanti-ibus.yml` is already GTK-ready (committed as 586a8e4).
-- Build and release x86_64 + aarch64 IBus Flatpaks.
-- Validate with `package-test.yml`.
-- **Blocked until Task C green.**
+### Task 3: Debug build failures (if Task 2 fails)
+Read the failing build-command output and fix `tools/flatpak/shanti-ibus.yml`:
+- CMake configure fails → check `-S . -B <dir>` path and `-DENABLE_IBUS=ON`; confirm `CMakeLists.txt` has no Qt5 references.
+- cargo fmt/test/clippy fails → run `cargo fmt --check`, `cargo test --locked`, `cargo clippy --locked -- -D warnings` against `crates/shanti-gui/Cargo.toml` locally (if cargo available).
+- cargo build fails → fix Rust compile errors in `crates/shanti-gui/src/`.
+- Data/desktop/icons/metainfo install fails → confirm source files exist at the paths listed in `build-commands`/`post-install`.
+- After each fix, re-run Task 2 with `--force-clean`.
+
+### Task 4: Push on success
+1. `git status --short` → confirm only intended files changed (no environment files).
+2. `git add <changed files>` and `git commit` if any Flatpak-manifest or source fixes were made during debugging.
+3. `git push origin rust-rewrite`.
+4. If no changes were needed (manifest already green), confirm `git status` is clean and report "nothing to push; manifest already builds."
 
 ---
 
@@ -70,28 +68,26 @@
 
 | Risk | Mitigation |
 |------|------------|
-| `src/frontend`/`src/shared` deletion breaks unrelated code | Verified: `src/shared` only used by `src/frontend`; `src/platform` and `src/engine` unaffected by CMakeLists.txt change. |
-| Binary name / uninstall allowlist contract | `shanti-gui` binary name preserved (Flatpak installs cargo binary as `shanti-gui`); uninstall allowlist unchanged. |
-| Real-session GNOME validation unavailable locally | Gate Task D on maintainer confirmation; do not switch manifest prematurely. |
-| `tools/portable/build.sh` Qt bundling removed but Qt GUI still needed by some users | Per plan, Qt `shanti-gui` stays until GTK covers required controls and passes package checks; coordinate with user before removing Qt from portable build. |
+| `flatpak-builder`/cargo/cc not available locally | Delegate to CI (`ci.yml` builds the Flatpak; `release.yml` builds+releases x86_64+aarch64). |
+| `--share=network` build-arg blocked in sandbox | Ensure network access; Flatpak Builder needs network for cargo deps and Flathub runtime fetch. |
+| Build-dir/state-dir on different filesystems | Use `--state-dir` on the same filesystem as `/tmp/shanti-ibus-build`, or put both under `~/.cache/shanti-keyboard/`. |
+| cargo registry not cached in sandbox | First build downloads crates; may be slow or fail without network. |
+| `cc` missing for Rust build scripts | CI provides the toolchain; local host lacks it. |
 
 ---
 
 ## Rollback
 
-- Keep the Qt `shanti-gui` build working until GTK switch validated.
-- Do not delete `src/frontend/` until Task C passes.
-- All changes are on `rust-rewrite`; can revert to `origin/rust-rewrite` if needed.
+- All changes are already committed on `rust-rewrite`; `git push origin rust-rewrite` is the only mutating git action. If a debug fix breaks the build, revert the fix commit before pushing.
+- Do not push if `git status` shows uncommitted environment files (`.conda/`, `.kilo/kilo.jsonc`, `environment.yml`); those are not part of this goal.
 
 ---
 
 ## Validation plan
 
-- `git status` clean after commits; `src/frontend` and `src/shared` removed from tracking.
-- `CMakeLists.txt` configures without Qt5 (no `find_package(Qt5)`).
-- `package-test.yml` passes (GTK binary present, uninstall allowlist intact).
-- Real-desktop Bengali typing through IBus on GNOME confirmed by maintainer.
-
----
+- `flatpak-builder` exits 0 with `--force-clean`.
+- `flatpak run --user org.shanti.ShantiIbus --version` and `--check-data` succeed.
+- `git log --oneline -1` shows the fix commit on `rust-rewrite`; `git status` clean (except untracked env files).
+- `git push origin rust-rewrite` succeeds.
 
 Write this plan to `.kilo/plans/1795113726207-gtk-flatpak-switch-plan.md` and call `plan_exit`.

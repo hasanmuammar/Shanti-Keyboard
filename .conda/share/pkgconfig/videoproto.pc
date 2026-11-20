@@ -1,0 +1,7 @@
+prefix=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b
+includedir=${prefix}/include
+
+Name: VideoProto
+Description: Video extension headers
+Version: 2.3.3
+Cflags: -I${includedir}
