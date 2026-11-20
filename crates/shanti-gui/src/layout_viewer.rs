@@ -3,7 +3,7 @@ use std::rc::Rc;
 use adw::prelude::*;
 use adw::ViewStack;
 use gtk::gdk_pixbuf::prelude::PixbufLoaderExt;
-use gtk::{Box as GtkBox, Button, Label, Orientation, Picture, gdk_pixbuf::PixbufLoader};
+use gtk::{gdk_pixbuf::PixbufLoader, Box as GtkBox, Button, Label, Orientation, Picture};
 
 use crate::keyboard::{KeyboardWidget, Mode};
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
