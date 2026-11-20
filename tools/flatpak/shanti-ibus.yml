@@ -40,9 +40,12 @@ modules:
       # Flatpak Builder runs each build-command in a fresh shell whose
       # working directory is the module source root (/run/build/shanti-keyboard),
       # so use -S . for the source and -B for the out-of-tree build directory.
-      - mkdir -p /run/build/shanti-keyboard/cmake-build
-      - cmake -B /run/build/shanti-keyboard/cmake-build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBIN_DIR=/app/bin -DDATADIR=/app/share -DLIBEXECDIR=/app/libexec -DENABLE_IBUS=ON -DBUILD_FRONTEND=OFF
-      - ninja -C /run/build/shanti-keyboard/cmake-build
+      # Mirror the proven portable build.sh pattern: cmake configure, then
+      # cmake --build / cmake --install (generator-agnostic) rather than
+      # calling ninja -C directly.
+      - rm -rf /run/build/shanti-keyboard/cmake-build
+      - cmake -S . -B /run/build/shanti-keyboard/cmake-build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBIN_DIR=/app/bin -DDATADIR=/app/share -DLIBEXECDIR=/app/libexec -DENABLE_IBUS=ON
+      - cmake --build /run/build/shanti-keyboard/cmake-build --parallel 2
       - cmake --install /run/build/shanti-keyboard/cmake-build
       # Lint and test the GTK GUI before installing it as the production launcher.
       - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
