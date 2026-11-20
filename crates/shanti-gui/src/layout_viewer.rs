@@ -2,9 +2,8 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::ViewStack;
-use gdk_pixbuf::prelude::PixbufLoaderExt;
-use gtk::glib::translate::GlibPtrDefault;
-use gtk::{Box as GtkBox, Button, Label, Orientation, Picture};
+use gtk::gdk_pixbuf::prelude::PixbufLoaderExt;
+use gtk::{Box as GtkBox, Button, Label, Orientation, Picture, gdk_pixbuf::PixbufLoader};
 
 use crate::keyboard::{KeyboardWidget, Mode};
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
@@ -155,7 +154,7 @@ impl LayoutViewer {
             return;
         }
 
-        let loader = gdk_pixbuf::PixbufLoader::new();
+        let loader = PixbufLoader::new();
         if loader.write(&decoded).is_err() {
             self.image_box
                 .append(&placeholder("Failed to decode image"));
@@ -168,12 +167,9 @@ impl LayoutViewer {
             return;
         };
 
-        // gdk-pixbuf 0.20 (direct dep) and gtk4's gdk-pixbuf 0.21 are different
-        // Rust types wrapping the same C GdkPixbuf pointer; borrow the pointer
-        // to construct gtk4's Pixbuf for Picture::for_pixbuf.
-        let raw = pixbuf.as_ptr() as *mut <gtk::gdk_pixbuf::Pixbuf as GlibPtrDefault>::GlibType;
-        let pixbuf = unsafe { gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(&raw) };
-        let picture = Picture::for_pixbuf(pixbuf);
+        // gtk4's gdk-pixbuf 0.21 PixbufLoader and Picture::for_pixbuf share the
+        // same Pixbuf type, so no cross-version conversion is needed.
+        let picture = Picture::for_pixbuf(&pixbuf);
         picture.set_hexpand(true);
         picture.set_vexpand(true);
         self.image_box.append(&picture);
