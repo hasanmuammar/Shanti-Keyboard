@@ -3,8 +3,7 @@ use std::rc::Rc;
 use crate::auto_correct_dialog::AutoCorrectDialog;
 use adw::prelude::*;
 use adw::{
-    ActionRow, ComboRow, EntryRow, PreferencesGroup, PreferencesPage, PreferencesWindow,
-    ToggleSwitch,
+    ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow,
 };
 use gtk::{prelude::*, Button};
 use shanti_config::Settings;
@@ -107,7 +106,7 @@ impl SettingsDialog {
         // ---- Phonetic page ----
         let phonetic = PreferencesPage::new();
         phonetic.set_title("Phonetic");
-        phonetic.set_icon_name("accessories-character-map-symbolic");
+        phonetic.set_icon_name(Some("accessories-character-map-symbolic"));
 
         let phonetic_group = PreferencesGroup::new();
         phonetic_group.set_title("Phonetic keyboard layout");
@@ -132,7 +131,7 @@ impl SettingsDialog {
         // ---- Fixed page ----
         let fixed = PreferencesPage::new();
         fixed.set_title("Fixed");
-        fixed.set_icon_name("accessories-text-editor-symbolic");
+        fixed.set_icon_name(Some("accessories-text-editor-symbolic"));
 
         let fixed_group = PreferencesGroup::new();
         fixed_group.set_title("Fixed keyboard layout");
@@ -182,19 +181,12 @@ impl SettingsDialog {
 
         let old_kar_order = ComboRow::new();
         old_kar_order.set_title("Kar order");
-        old_kar_order.append("Modern", "Modern");
-        old_kar_order.append("Old", "Old");
-        old_kar_order.set_selected(if settings.borrow().fixed_old_kar_order {
-            1
-        } else {
-            0
-        });
         fixed_group.add(&old_kar_order);
 
         // ---- GNOME IBus Integration panel ----
         let ibus = PreferencesPage::new();
         ibus.set_title("GNOME IBus Integration");
-        ibus.set_icon_name("system-users-symbolic");
+        ibus.set_icon_name(Some("system-users-symbolic"));
 
         let ibus_group = PreferencesGroup::new();
         ibus_group.set_title("Integration");
@@ -262,7 +254,7 @@ impl SettingsDialog {
     }
 
     fn do_setup(
-        settings: &Rc<std::cell::RefCell<Settings>>,
+        _settings: &Rc<std::cell::RefCell<Settings>>,
         service: &Rc<StubService>,
         status_row: &ActionRow,
         setup_button: &Button,
@@ -316,9 +308,6 @@ impl SettingsDialog {
                 status_row.set_subtitle("Not installed");
                 setup_button.set_sensitive(true);
                 remove_button.set_sensitive(false);
-            }
-            Err(Error::Unmanaged(path)) => {
-                status_row.set_subtitle(&format!("Unmanaged file: {}", path.display()));
             }
             Err(e) => {
                 status_row.set_subtitle(&format!("Error: {}", e));

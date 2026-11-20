@@ -1,22 +1,20 @@
 use adw::prelude::*;
-use adw::Window;
 use gtk::prelude::*;
-use gtk::AboutDialog;
+use gtk::AboutDialog as GtkAboutDialog;
 
 pub struct AboutDialog {
-    pub window: Window,
+    pub window: adw::Window,
 }
 
 impl AboutDialog {
     pub fn new() -> Self {
-        let about = AboutDialog::builder()
-            .program_name("Shanti Keyboard")
-            .version(env!("CARGO_PKG_VERSION"))
-            .website("https://github.com/hasanmuammar/Shanti-Keyboard")
-            .comments("Bangla input method for GNOME and IBus")
-            .build();
+        let about = GtkAboutDialog::new();
+        about.set_program_name("Shanti Keyboard");
+        about.set_version(env!("CARGO_PKG_VERSION"));
+        about.set_website("https://github.com/hasanmuammar/Shanti-Keyboard");
+        about.set_comments("Bangla input method for GNOME and IBus");
 
-        let window = Window::builder()
+        let window = adw::Window::builder()
             .title("About Shanti Keyboard")
             .modal(true)
             .default_width(460)
@@ -27,6 +25,10 @@ impl AboutDialog {
         window.present();
 
         Self { window }
+    }
+
+    pub fn window(&self) -> &adw::Window {
+        &self.window
     }
 }
 

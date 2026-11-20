@@ -7,7 +7,8 @@ use gtk::{Box as GtkBox, Button, Entry, Label, ListBox, ListBoxRow, Orientation,
 
 use shanti_paths;
 
-const BUNDLED_AUTOCORRECT: &str = include_str!("../../../data/autocorrect.json");
+const BUNDLED_AUTOCORRECT: &str =
+    include_str!("../../../../src/engine/riti/data/autocorrect.json");
 
 pub struct AutoCorrectDialog {
     pub window: Window,
@@ -91,6 +92,7 @@ impl AutoCorrectDialog {
         let replace_entry_c = replace_entry.clone();
         let with_entry_c = with_entry.clone();
         let overlay_c = overlay.clone();
+        let user_path_add = user_path.clone();
         add_btn.connect_clicked(move |_| {
             let replace = replace_entry_c.text().to_string();
             let with_ = with_entry_c.text().to_string();
@@ -98,7 +100,7 @@ impl AutoCorrectDialog {
                 return;
             }
             entries_c.borrow_mut().push((replace, with_));
-            Self::save_entries(&user_path, &entries_c.borrow());
+            Self::save_entries(&user_path_add, &entries_c.borrow());
             Self::refresh_list(&list_box_c, &entries_c);
             replace_entry_c.set_text("");
             with_entry_c.set_text("");
@@ -110,6 +112,7 @@ impl AutoCorrectDialog {
         let replace_entry_c2 = replace_entry.clone();
         let with_entry_c2 = with_entry.clone();
         let overlay_c2 = overlay.clone();
+        let user_path_update = user_path.clone();
         update_btn.connect_clicked(move |_| {
             if let Some(row) = list_box_c2.selected_row() {
                 let idx = row.index() as usize;
@@ -119,7 +122,7 @@ impl AutoCorrectDialog {
                     return;
                 }
                 entries_c2.borrow_mut()[idx] = (replace, with_);
-                Self::save_entries(&user_path, &entries_c2.borrow());
+                Self::save_entries(&user_path_update, &entries_c2.borrow());
                 Self::refresh_list(&list_box_c2, &entries_c2);
                 overlay_c2.add_toast(Toast::builder().title("Entry updated").build());
             }
@@ -128,11 +131,12 @@ impl AutoCorrectDialog {
         let entries_c3 = entries.clone();
         let list_box_c3 = list_box.clone();
         let overlay_c3 = overlay.clone();
+        let user_path_clear = user_path.clone();
         clear_btn.connect_clicked(move |_| {
             if let Some(row) = list_box_c3.selected_row() {
                 let idx = row.index() as usize;
                 entries_c3.borrow_mut().remove(idx);
-                Self::save_entries(&user_path, &entries_c3.borrow());
+                Self::save_entries(&user_path_clear, &entries_c3.borrow());
                 Self::refresh_list(&list_box_c3, &entries_c3);
                 overlay_c3.add_toast(Toast::builder().title("Entry cleared").build());
             }
@@ -151,8 +155,9 @@ impl AutoCorrectDialog {
             }
         });
 
+        let window_close = window.clone();
         close_btn.connect_clicked(move |_| {
-            window.close();
+            window_close.close();
         });
 
         Self {

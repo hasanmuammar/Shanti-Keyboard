@@ -145,7 +145,7 @@ fn run() -> ExitCode {
         settings_button.add_css_class("suggested-action");
         settings_button.connect_clicked(move |_| {
             let dialog = settings_dialog::SettingsDialog::new();
-            dialog.window().present();
+            dialog.window.present();
         });
 
         let view_layout = Button::with_label("View Layout");
@@ -157,7 +157,7 @@ fn run() -> ExitCode {
                 .default_width(700)
                 .default_height(500)
                 .build();
-            let viewer = layout_viewer::LayoutViewer::new();
+            let mut viewer = layout_viewer::LayoutViewer::new();
             let root = shanti_paths::engine_data_dir();
             let layout_path = root.join("layouts/avrophonetic.json");
             if let Ok(text) = std::fs::read_to_string(&layout_path) {
@@ -203,7 +203,7 @@ fn run() -> ExitCode {
                 .default_width(700)
                 .default_height(500)
                 .build();
-            let viewer = layout_viewer::LayoutViewer::new();
+            let mut viewer = layout_viewer::LayoutViewer::new();
             if let Some(ref text) = layout_text {
                 viewer.set_layout(text);
             }
@@ -230,7 +230,7 @@ fn run() -> ExitCode {
 
         top_bar.icon_btn.connect_clicked(move |_| {
             let dialog = about_dialog::AboutDialog::new();
-            dialog.window().present();
+            dialog.window.present();
         });
 
         window.present();

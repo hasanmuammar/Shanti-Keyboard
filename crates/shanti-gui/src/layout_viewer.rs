@@ -3,10 +3,9 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::ViewStack;
-use gdk::prelude::*;
 use gdk_pixbuf;
 use gtk::prelude::*;
-use gtk::{Box as GtkBox, Button, Label, Orientation, Picture, WidgetExt};
+use gtk::{Box as GtkBox, Button, Label, Orientation, Picture};
 
 use crate::keyboard::KeyboardWidget;
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
@@ -96,7 +95,7 @@ impl LayoutViewer {
         &self.about_button
     }
 
-    pub fn set_layout(&self, layout_text: &str) {
+    pub fn set_layout(&mut self, layout_text: &str) {
         let layout = match LayoutFile::parse(layout_text) {
             Ok(layout) => layout,
             Err(_) => return,
@@ -198,7 +197,6 @@ impl LayoutViewer {
         let picture = Picture::for_pixbuf(&pixbuf);
         picture.set_hexpand(true);
         picture.set_vexpand(true);
-        picture.set_content_fit(gtk::PictureContentFit::Contain);
         self.image_box.append(&picture);
     }
 

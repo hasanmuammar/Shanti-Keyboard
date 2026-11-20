@@ -18,10 +18,10 @@ impl TopBar {
         let window = Window::builder()
             .title("Shanti Keyboard")
             .decorated(false) // frameless
-            .keep_above(true)
             .default_width(220)
             .default_height(44)
             .build();
+        window.set_keep_above(true);
 
         let content = GtkBox::new(gtk::Orientation::Horizontal, 6);
         content.set_margin_top(6);
