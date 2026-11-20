@@ -16,7 +16,13 @@ usage() {
     cat <<'EOF'
 Usage: tools/build.sh [options]
 
-Build Shanti Keyboard from source.
+Build Shanti Keyboard from source (source-build fallback only).
+
+Flatpak bundles (shanti-ibus-x86_64.flatpak / shanti-ibus-aarch64.flatpak)
+are the primary distribution format. Use tools/flatpak/shanti-ibus.yml with
+flatpak-builder for production builds, or download bundles from GitHub
+Releases. This source-build path is provided for development, local builds,
+and diagnosing the build system; it is not the recommended installation path.
 
 Options:
   --backend ibus      Build the IBus engine (the only backend in this branch).
@@ -73,7 +79,7 @@ main() {
 
     log "Backend: $OBK_BACKEND"
     log "Build environment: $OBK_BUILDER"
-    log "Build mode: $ACTION"
+    log "Build mode: $ACTION (source-build fallback; Flatpak is primary)"
 
     if [[ "$NONINTERACTIVE" == 1 ]]; then
         if [[ "$OBK_BUILDER" != host ]] && ! builder_exists; then
@@ -92,12 +98,12 @@ main() {
     if [[ "$ACTION" == package ]]; then
         package_shanti
         cleanup_builder
-        log "Prebuilt package was created in ./dist/."
+        log "Prebuilt source package was created in ./dist/ (source-build fallback; Flatpak bundles are the release format)."
     else
         install_shanti
         verify_installation
         cleanup_builder
-        log "Shanti Keyboard was built and installed for the current user."
+        log "Shanti Keyboard was built from source and installed for the current user. Prefer Flatpak bundles for production use."
     fi
 }
 

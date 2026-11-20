@@ -1,10 +1,12 @@
 # Install Shanti Keyboard
 
-Choose the method that matches your desktop:
+Flatpak bundles (`shanti-ibus-x86_64.flatpak` / `shanti-ibus-aarch64.flatpak`)
+are the primary distribution format. Download them from
+[GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases).
 
-## GNOME: IBus Flatpak
+## GNOME: IBus Flatpak (recommended)
 
-Download the IBus Flatpak bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). Flatpak needs a Flathub remote in the same scope as the app. For a per-user install, add the user remote if needed:
+Flatpak needs a Flathub remote in the same scope as the app. For a per-user install, add the user remote if needed:
 
 ```bash
 flatpak remote-add --user --if-not-exists flathub \
@@ -19,53 +21,20 @@ flatpak install --user ./shanti-ibus-x86_64.flatpak
 
 Flatpak should fetch the required GNOME runtime (`org.gnome.Platform//51`) from Flathub automatically. Use the `aarch64` bundle on ARM64. Keep the scope consistent: use `--user` for both commands, or omit it for both to install system-wide. If Flatpak says the runtime was not found, install it explicitly with `flatpak install --user flathub org.gnome.Platform//51` (omit `--user` for system scope). Launch the app and accept the first-run integration prompt. Then add **Shanti** from **GNOME Settings → Keyboard → Input Sources → Add Input Source**.
 
-See the [Flatpak guide](../../tools/flatpak/README.md) for screenshots-free step-by-step setup, verification and removal instructions.
+See the [Flatpak guide](../../tools/flatpak/README.md) for step-by-step setup, verification and removal instructions.
 
-## Portable install
+## Source-build fallback
 
-Release assets are Flatpak-only; the portable model remains available as a
-**from-checkout** install. From a source checkout, run:
+The portable source-build path is maintained as a fallback for development
+and local builds when a Flatpak bundle is not available. Release assets are
+Flatpak-only; there are no portable download archives for current releases.
 
-```bash
-bash tools/install.sh
-```
-
-It downloads the release selected in `release-tag.txt`, checks its SHA-256 checksum and installs for the current user. This branch supports IBus. To choose a release explicitly:
-
-```bash
-bash tools/install.sh --version shanti-alpha.1
-```
-
-Older pre-releases (`shanti-alpha.1` through `shanti-alpha.1.4`) still publish
-portable archives, so `--version` keeps working for them. Available versions
-are listed on [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). Optional provenance verification requires `gh`:
-
-```bash
-bash tools/install.sh --version shanti-alpha.1 --verify-provenance
-```
-
-Downloaded release archives (pre-releases and local `tools/build.sh --package`
-output) contain the installer and uninstaller, so an archive needs no source
-checkout:
-
-```text
-share/shanti-keyboard/tools/install.sh
-share/shanti-keyboard/tools/uninstall.sh
-share/shanti-keyboard/release-tag.txt
-```
-
-After extracting the archive into your home directory they are available under `~/.local/share/shanti-keyboard/`, for example:
-
-```bash
-bash ~/.local/share/shanti-keyboard/tools/uninstall.sh
-```
-
-## Build from source
-
-For development or local builds:
+From a source checkout, build and install for the current user:
 
 ```bash
 bash tools/build.sh
 ```
 
-See the [development guide](Development.md) for build options. To remove the portable installation, run `bash tools/uninstall.sh`. Flatpak removal is covered in the [Flatpak guide](../../tools/flatpak/README.md).
+See the [development guide](Development.md) for build options. To remove the
+source-build installation, run `bash tools/uninstall.sh`. Flatpak removal is
+covered in the [Flatpak guide](../../tools/flatpak/README.md).

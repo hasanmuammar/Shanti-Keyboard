@@ -218,5 +218,6 @@ flatpak run org.flatpak.Builder --user --install --force-clean \
 The release bundles are direct downloads, not a Flatpak remote. If installation
 says the required runtime was not found, check that Flathub is added to the
 same installation scope. Then run the explicit runtime install above, omitting
-`--user` for a system-wide install. The Flatpak and the portable installer
-(from the source checkout's `tools/build.sh`) are separate installations.
+`--user` for a system-wide install. The Flatpak bundle is the release format;
+the source-build path (`tools/build.sh`) is a fallback for development and
+local builds only.

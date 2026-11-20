@@ -16,7 +16,13 @@ usage() {
     cat <<'EOF'
 Usage: tools/install.sh [options]
 
-Install the prebuilt Shanti Keyboard build specified by release-tag.txt for this fork.
+Install the prebuilt Shanti Keyboard release specified by release-tag.txt for this fork.
+
+Release assets are Flatpak-only (shanti-ibus-<arch>.flatpak bundles). This
+portable installer is a source-build fallback path: it downloads a portable
+source-package archive and installs it for the current user. Prefer Flatpak
+bundles for production use; use this installer only when a Flatpak bundle is
+not available or when testing from source.
 
 Options:
   --version TAG      Install a specific Shanti release tag.
@@ -299,7 +305,7 @@ main() {
     download_release
     install_shanti
     verify_installation
-    log "Shanti Keyboard was installed for the current user."
+    log "Shanti Keyboard was installed from a portable source package for the current user. Prefer Flatpak bundles for production use."
     log "Need to rebuild from source? Use: bash tools/build.sh"
 }
 

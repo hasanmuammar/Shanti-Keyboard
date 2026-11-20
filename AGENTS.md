@@ -27,15 +27,36 @@ git submodule update --init --recursive
 
 ## Build and Development
 
-Prefer the Flatpak workflow for bundled packaging. Build an IBus source package when needed with:
+Flatpak bundles are the primary build and distribution format. Build the GNOME
+IBus Flatpak locally with Flatpak Builder on `tools/flatpak/shanti-ibus.yml`:
+
+```bash
+flatpak-builder --user --install --force-clean \
+  --default-branch=stable \
+  /tmp/shanti-ibus-build tools/flatpak/shanti-ibus.yml
+```
+
+CI builds and smoke-tests the Flatpak for x86_64 and aarch64 on every push.
+
+Build an IBus source package when needed with:
 
 ```bash
 bash tools/build.sh --backend ibus --package
 ```
 
-The default `tools/build.sh` action builds and installs to the current user's home; use `--package` to produce `./dist` without installing. Build state is in `${XDG_CACHE_HOME:-$HOME/.cache}/shanti-keyboard/build`. The script may use Toolbx, Distrobox, Podman or Docker; it will not install Podman or change host packages in non-interactive mode.
+The default `tools/build.sh` action builds from source and installs to the
+current user's home; this is a source-build fallback for development and
+diagnosing the build system — not the recommended installation path. Use
+`--package` to produce `./dist` without installing. Build state is in
+`${XDG_CACHE_HOME:-$HOME/.cache}/shanti-keyboard/build`. The script may use
+Toolbx, Distrobox, Podman or Docker; it will not install Podman or change host
+packages in non-interactive mode.
 
-Manual CMake builds are for diagnosing the build system. Enable IBus, build out of tree with Ninja, and do not build from the source directory. The project requires Linux, CMake ≥ 3.18, Ninja, Rust/Cargo, Qt5 (Widgets, Network, Svg, DBus), libzstd and IBus development files. `-DBUILD_FRONTEND=OFF` skips the Qt GUI.
+Manual CMake builds are for diagnosing the build system. Enable IBus, build
+out of tree with Ninja, and do not build from the source directory. The
+project requires Linux, CMake ≥ 3.18, Ninja, Rust/Cargo, Qt5 (Widgets,
+Network, Svg, DBus), libzstd and IBus development files.
+`-DBUILD_FRONTEND=OFF` skips the Qt GUI.
 
 ## Generated Headers
 

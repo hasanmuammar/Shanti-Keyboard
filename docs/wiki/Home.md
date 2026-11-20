@@ -16,7 +16,7 @@ The GNOME IBus app `org.shanti.ShantiIbus` is distributed as an architecture-spe
 2. **Integrity:** validate package archives and downloads; verify provenance where available.
 3. **Input-method integration:** keep Bengali typing working through the relevant host input-method framework.
 4. **Maintainability:** reproducible build and packaging steps, automated checks, and actionable troubleshooting documentation.
-5. **Distribution choices:** retain the portable installer and evaluate additional formats only where their practical value and integration costs are understood.
+5. **Distribution choices:** Flatpak bundles (`shanti-ibus-<arch>.flatpak`) are the release format; the source-build path (`tools/build.sh`) is a fallback for development and local builds only.
 
 ## Documentation
 

@@ -1,13 +1,16 @@
 # Architecture — Shanti Linux Fork
 
-Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard). It currently targets GNOME and IBus. Delivery includes a user-local installer and a bundled IBus Flatpak (`org.shanti.ShantiIbus`).
+Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard). It currently targets GNOME and IBus. Distribution is Flatpak-first (`shanti-ibus-x86_64.flatpak` / `shanti-ibus-aarch64.flatpak`); source builds via `tools/build.sh` are a fallback for development and diagnosing the build system.
 
 ## Delivery paths
 
-### Portable user-local installation
+### IBus-only Flatpak (primary distribution)
 
-- `tools/install.sh` downloads and validates a published release archive, then installs it for the current user.
-- `tools/build.sh` is the source-build and release-packaging entry point.
+The developer-built Flatpak manifest is `tools/flatpak/shanti-ibus.yml`, with app ID `org.shanti.ShantiIbus`. It includes the GUI and IBus engine. Its GUI settings and layout data live in the Flatpak's sandboxed data/config locations. Download bundles from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) or build locally with Flatpak Builder.
+
+### Source-build fallback
+
+- `tools/build.sh` builds the IBus engine from source and installs to `~/.local`; this is a source-build fallback for development and local builds, not the recommended installation path.
 - `tools/portable/common.sh` defines paths and shared helpers.
 - `tools/portable/environment.sh` selects the backend and build environment.
 - `tools/portable/build.sh` configures, compiles and stages the application.
@@ -15,13 +18,9 @@ Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.
 - `tools/portable/install.sh` installs files and registers desktop/input-method resources.
 - `tools/uninstall.sh` removes the user-local installation; user data is preserved unless the corresponding purge option is requested.
 
-The default prefix is `~/.local`. Bundled runtime libraries are placed under `~/.local/lib/shanti`; build and staging state is kept under the XDG cache directory. The portable installer uses IBus.
+The default prefix is `~/.local`. Bundled runtime libraries are placed under `~/.local/lib/shanti`; build and staging state is kept under the XDG cache directory. The source-build installer uses IBus.
 
-The portable installation registers an IBus user component and configures the user service environment so the host IBus daemon can discover it.
-
-### IBus-only Flatpak
-
-The developer-built Flatpak manifest is `tools/flatpak/shanti-ibus.yml`, with app ID `org.shanti.ShantiIbus`. It includes the GUI and IBus engine. Its GUI settings and layout data live in the Flatpak's sandboxed data/config locations.
+The source-build installation registers an IBus user component and configures the user service environment so the host IBus daemon can discover it.
 
 ## Build and validation boundaries
 

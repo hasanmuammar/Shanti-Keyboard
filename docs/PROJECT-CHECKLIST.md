@@ -9,18 +9,13 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 ## 1. Project scope
 
 - [x] Linux-focused fork of OpenBangla Keyboard.
-- [x] User-local portable installation architecture.
-- [x] IBus engine build for x86_64 and aarch64.
-- [x] x86_64 and aarch64 build targets.
+- [x] IBus Flatpak is the primary distribution format (x86_64 and aarch64).
+- [x] Source builds via `tools/build.sh` are a fallback for development and diagnosing the build system.
 - [x] Fork-owned alpha tags use the `shanti-alpha.*` pattern.
 - [x] IBus Flatpak has its own app ID: `org.shanti.ShantiIbus` (pre-rebrand was `org.openbangla.Shanti.IBus`).
 
-## 2. Portable installer and runtime
+## 2. Source-build fallback and runtime
 
-- [x] `tools/install.sh` validates release checksums and archive paths before installation.
-- [x] Archive and symlink-containment validation is exercised by package CI.
-- [x] Portable package checks validate GUI startup and data discovery.
-- [x] Uninstaller deletion allowlist and symlink/mount-boundary safeguards are exercised by package CI.
 - [ ] Publish a Shanti alpha release and test the installer against the actual release assets.
 - [ ] Test installation and removal on real x86_64 and aarch64 systems.
 - [ ] Test actual Bengali input through IBus on GNOME.
@@ -52,9 +47,8 @@ Latest observed workflow runs for commit `f91018f0` on 2026-10-15:
 
 - [x] [CI run #323](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions/runs/38758748698) passed.
 - [x] Flatpak bundle build succeeded on x86_64 and aarch64.
-- [x] All configured portable source-build jobs passed.
 - [x] [Prebuilt package test run #139](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions/runs/38758748633) passed.
-- [x] Historical package tests passed on the prior multi-backend branch.
+- [ ] Historical package tests passed on the prior multi-backend branch.
 - [ ] The latest CI result for this IBus-only branch has not yet been recorded. Real Bengali input and host-integration recovery are not covered by CI.
 
 These statuses describe the runs observed on the review date. Check the [Actions page](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions) for newer results.
