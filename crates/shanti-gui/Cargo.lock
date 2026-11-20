@@ -976,7 +976,7 @@ version = "0.1.0"
 name = "shanti-gui-rust"
 version = "0.1.0"
 dependencies = [
- "gdk-pixbuf 0.20.10",
+ "gdk-pixbuf 0.21.5",
  "gtk4",
  "libadwaita",
  "pangocairo",
