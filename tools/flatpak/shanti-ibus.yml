@@ -7,8 +7,9 @@ sdk-extensions:
 command: shanti-gui
 separate-locales: false
 
-# GNOME IBus engine Flatpak — switches to the GTK GUI on the GNOME runtime
-# once the GTK app passes package and real-session checks.
+# GNOME IBus engine Flatpak — ships the GTK4/libadwaita `shanti-gui` on the
+# GNOME 51 runtime. The Qt5 frontend was retired and real-session GNOME
+# typing through IBus has been verified, so this is the production manifest.
 finish-args:
   - --share=ipc
   - --socket=wayland
@@ -36,11 +37,17 @@ modules:
         CARGO_TARGET_DIR: /run/build/shanti-keyboard/cargo-target
     build-commands:
       # Build the IBus engine via CMake (Qt-free, wraps shanti-core).
+      # Flatpak Builder runs each build-command in a fresh shell whose
+      # working directory is the module source root (/run/build/shanti-keyboard),
+      # so use -S . for the source and -B for the out-of-tree build directory.
       - mkdir -p /run/build/shanti-keyboard/cmake-build
-      - cd /run/build/shanti-keyboard/cmake-build
-      - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBIN_DIR=/app/bin -DDATADIR=/app/share -DLIBEXECDIR=/app/libexec -DENABLE_IBUS=ON -DBUILD_FRONTEND=OFF ..
-      - ninja
-      - ninja install
+      - cmake -B /run/build/shanti-keyboard/cmake-build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DBIN_DIR=/app/bin -DDATADIR=/app/share -DLIBEXECDIR=/app/libexec -DENABLE_IBUS=ON -DBUILD_FRONTEND=OFF
+      - ninja -C /run/build/shanti-keyboard/cmake-build
+      - cmake --install /run/build/shanti-keyboard/cmake-build
+      # Lint and test the GTK GUI before installing it as the production launcher.
+      - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
+      - cargo test --locked --manifest-path crates/shanti-gui/Cargo.toml
+      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml -- -D warnings
       # Build the GTK GUI via cargo and install as `shanti-gui` (binary-name contract).
       - SHANTI_VERSION="$(cat version.txt)" cargo build --locked --release --manifest-path crates/shanti-gui/Cargo.toml
       - install -Dm755 /run/build/shanti-keyboard/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui
