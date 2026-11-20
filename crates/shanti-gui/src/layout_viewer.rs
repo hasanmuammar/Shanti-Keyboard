@@ -2,8 +2,8 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::ViewStack;
+use gdk_pixbuf::glib::translate::ToGlibPtr;
 use gdk_pixbuf::prelude::PixbufLoaderExt;
-use gtk::glib::translate::{FromGlibPtrBorrow, ToGlibPtr};
 use gtk::{Box as GtkBox, Button, Label, Orientation, Picture};
 
 use crate::keyboard::{KeyboardWidget, Mode};
