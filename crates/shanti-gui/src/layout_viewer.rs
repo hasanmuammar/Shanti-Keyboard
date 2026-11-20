@@ -175,7 +175,7 @@ impl LayoutViewer {
         let stash = pixbuf.to_glib_none();
         let pixbuf = unsafe {
             gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(
-                stash.ptr as *mut gtk::gdk_pixbuf::gdk_pixbuf_sys::GdkPixbuf
+                stash.ptr as *mut gtk::gdk_pixbuf::gdk_pixbuf_sys::GdkPixbuf,
             )
         };
         let picture = Picture::for_pixbuf(&pixbuf);
