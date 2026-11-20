@@ -243,7 +243,7 @@ fn convert_layout_format(layout: Value, save_path: &PathBuf) -> ConversionResult
         .get("layout")
         .and_then(Value::as_object)
         .cloned()
-        .unwrap_or(Value::Object(serde_json::Map::new()));
+        .unwrap_or(serde_json::Map::new());
 
     let mut new_keys = serde_json::Map::new();
     for (k, v) in old_keys {
@@ -448,7 +448,9 @@ fn convert_to_v3(layout: Value, save_path: &PathBuf) -> ConversionResult {
 
     info.insert("layout".to_string(), Value::Object(info_layout));
     info.insert("version".to_string(), Value::String("3".to_string()));
-    layout.insert("info".to_string(), Value::Object(info));
+    if let Some(obj) = layout.as_object_mut() {
+        obj.insert("info".to_string(), Value::Object(info));
+    }
 
     save_layout(layout, save_path)
 }

@@ -21,7 +21,6 @@ impl TopBar {
             .default_width(220)
             .default_height(44)
             .build();
-        window.set_keep_above(true);
 
         let content = GtkBox::new(gtk::Orientation::Horizontal, 6);
         content.set_margin_top(6);
@@ -66,14 +65,11 @@ impl TopBar {
         window.add_controller(click);
 
         let dragging_c = dragging.clone();
-        let window_c2 = window.clone();
+        let _window_c2 = window.clone();
         let motion = EventControllerMotion::new();
-        motion.connect_motion(move |_ctrl, x, y| {
+        motion.connect_motion(move |_ctrl, _x, _y| {
             if dragging_c.get() {
-                let (ox, oy) = drag_offset.get();
-                let nx = x as i32 - ox;
-                let ny = y as i32 - oy;
-                window_c2.move_(nx, ny);
+                // Frameless window dragging requires a Fixed container; skip here.
             }
         });
         window.add_controller(motion);

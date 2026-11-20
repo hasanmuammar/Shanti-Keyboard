@@ -120,6 +120,7 @@ fn run() -> ExitCode {
         shanti_paths::ensure_user_dirs();
         platform_config::setup_input_sources();
         let settings = Settings::load().unwrap_or_default();
+        let application = application.clone();
 
         let content = GtkBox::new(Orientation::Vertical, 0);
         content.append(&HeaderBar::new());

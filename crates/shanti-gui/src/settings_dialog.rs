@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::auto_correct_dialog::AutoCorrectDialog;
 use adw::prelude::*;
-use adw::{ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow};
+use adw::{ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow, ToggleSwitch};
 use gtk::{prelude::*, Button};
 use shanti_config::Settings;
 
@@ -78,13 +78,6 @@ impl SettingsDialog {
 
         let orientation = ComboRow::new();
         orientation.set_title("Candidate window orientation");
-        orientation.append("Horizontal", "Horizontal");
-        orientation.append("Vertical", "Vertical");
-        orientation.set_selected(if settings.borrow().candidate_win_horizontal {
-            0
-        } else {
-            1
-        });
         general_group.add(&orientation);
 
         let include_english = ActionRow::new();

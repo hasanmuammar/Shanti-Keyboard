@@ -9,8 +9,8 @@ pub struct AboutDialog {
 impl AboutDialog {
     pub fn new() -> Self {
         let about = GtkAboutDialog::new();
-        about.set_program_name("Shanti Keyboard");
-        about.set_version(env!("CARGO_PKG_VERSION"));
+        about.set_program_name(Some("Shanti Keyboard"));
+        about.set_version(Some(env!("CARGO_PKG_VERSION")));
         about.set_website("https://github.com/hasanmuammar/Shanti-Keyboard");
         about.set_comments("Bangla input method for GNOME and IBus");
 

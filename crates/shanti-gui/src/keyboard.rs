@@ -224,3 +224,9 @@ impl KeyboardWidget {
         false
     }
 }
+
+impl Default for KeyboardWidget {
+    fn default() -> Self {
+        Self::new()
+    }
+}

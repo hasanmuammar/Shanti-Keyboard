@@ -7,7 +7,8 @@ use gtk::{Box as GtkBox, Button, Entry, Label, ListBox, ListBoxRow, Orientation,
 
 use shanti_paths;
 
-const BUNDLED_AUTOCORRECT: &str = include_str!("../../../../src/engine/riti/data/autocorrect.json");
+const BUNDLED_AUTOCORRECT: &str =
+    include_str!("../../../src/engine/riti/data/autocorrect.json");
 
 pub struct AutoCorrectDialog {
     pub window: Window,
