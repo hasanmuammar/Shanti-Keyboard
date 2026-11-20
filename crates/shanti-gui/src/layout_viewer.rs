@@ -2,8 +2,8 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::ViewStack;
-use gdk_pixbuf::glib::translate::ToGlibPtr;
 use gdk_pixbuf::prelude::PixbufLoaderExt;
+use gtk::glib::translate::GlibPtrDefault;
 use gtk::{Box as GtkBox, Button, Label, Orientation, Picture};
 
 use crate::keyboard::{KeyboardWidget, Mode};
@@ -171,12 +171,8 @@ impl LayoutViewer {
         // gdk-pixbuf 0.20 (direct dep) and gtk4's gdk-pixbuf 0.21 are different
         // Rust types wrapping the same C GdkPixbuf pointer; borrow the pointer
         // to construct gtk4's Pixbuf for Picture::for_pixbuf.
-        let stash: gdk_pixbuf::glib::translate::Stash<
-            '_,
-            *mut <gdk_pixbuf::Pixbuf as gdk_pixbuf::glib::translate::GlibPtrDefault>::GlibType,
-            gdk_pixbuf::Pixbuf,
-        > = pixbuf.to_glib_none();
-        let pixbuf = unsafe { gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(&(stash.0 as *mut _)) };
+        let raw = pixbuf.as_ptr() as *mut <gtk::gdk_pixbuf::Pixbuf as GlibPtrDefault>::GlibType;
+        let pixbuf = unsafe { gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(&raw) };
         let picture = Picture::for_pixbuf(pixbuf);
         picture.set_hexpand(true);
         picture.set_vexpand(true);
