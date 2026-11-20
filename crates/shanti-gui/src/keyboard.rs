@@ -266,7 +266,7 @@ impl KeyboardWidget {
          alt_gr_highlight, alt_gr_highlight_text) = if state.dark_mode {
         (
             (0.12, 0.12, 0.14),   // dark bezel
-            (0.22, 0.24, 0.27),   #3a3f47-ish dark keycap
+            (0.22, 0.24, 0.27),   // ~3a3f47-ish dark keycap
             (0.45, 0.48, 0.51),   // dark border
             (0.70, 0.73, 0.76),   // light modifier text
             (0.60, 0.63, 0.66),   // light ASCII text
@@ -276,14 +276,14 @@ impl KeyboardWidget {
         )
     } else {
         (
-            (0.227, 0.247, 0.278), // #3a3f47 light bezel
-            (0.961, 0.965, 0.969), // #f5f6f7 light keycap
-            (0.788, 0.800, 0.820), // #c9ccd1 light border
-            (0.353, 0.376, 0.412), // #5a6069 modifier text
-            (0.486, 0.510, 0.549), // #7c828c ASCII text
-            (0.106, 0.227, 0.557), // #1b3a8f Bangla text
-            (0.086, 0.639, 0.580), // #16a394 alt-gr highlight
-            (1.0, 1.0, 1.0),       // #ffffff highlight text
+            (0.227, 0.247, 0.278), // ~3a3f47 light bezel
+            (0.961, 0.965, 0.969), // ~f5f6f7 light keycap
+            (0.788, 0.800, 0.820), // ~c9ccd1 light border
+            (0.353, 0.376, 0.412), // ~5a6069 modifier text
+            (0.486, 0.510, 0.549), // ~7c828c ASCII text
+            (0.106, 0.227, 0.557), // ~1b3a8f Bangla text
+            (0.086, 0.639, 0.580), // ~16a394 alt-gr highlight
+            (1.0, 1.0, 1.0),       // ~ffffff highlight text
         )
     };
         cr.rectangle(0.0, 0.0, width, height);
