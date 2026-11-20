@@ -6,9 +6,7 @@ use adw::ViewStack;
 use gdk::prelude::*;
 use gdk_pixbuf;
 use gtk::prelude::*;
-use gtk::{
-    Box as GtkBox, Button, Label, Orientation, Picture, WidgetExt,
-};
+use gtk::{Box as GtkBox, Button, Label, Orientation, Picture, WidgetExt};
 
 use crate::keyboard::KeyboardWidget;
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
@@ -32,11 +30,7 @@ impl LayoutViewer {
         stack.set_hexpand(true);
 
         let keyboard_widget = Rc::new(KeyboardWidget::new());
-        stack.add_titled(
-            keyboard_widget.widget(),
-            Some("keyboard"),
-            Some("Keyboard"),
-        );
+        stack.add_titled(keyboard_widget.widget(), Some("keyboard"), Some("Keyboard"));
 
         let image_box = GtkBox::new(Orientation::Vertical, 0);
         image_box.set_vexpand(true);

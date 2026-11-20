@@ -1,21 +1,19 @@
-mod keyboard;
-mod layout_viewer;
-mod settings_dialog;
+mod about_dialog;
 mod about_file;
 mod auto_correct_dialog;
-mod top_bar;
-mod about_dialog;
-mod platform_config;
+mod keyboard;
 mod layout_converter;
+mod layout_viewer;
+mod platform_config;
+mod settings_dialog;
+mod top_bar;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use adw::prelude::*;
 use adw::{Application, ApplicationWindow, HeaderBar};
-use gtk::{
-    gio, prelude::*, Box as GtkBox, Button, Label, Orientation,
-};
+use gtk::{gio, prelude::*, Box as GtkBox, Button, Label, Orientation};
 use shanti_config::Settings;
 use shanti_paths;
 

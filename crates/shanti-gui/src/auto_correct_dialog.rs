@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use adw::prelude::*;
-use adw::{Window, Toast, ToastOverlay};
+use adw::{Toast, ToastOverlay, Window};
 use gtk::prelude::*;
-use gtk::{Box as GtkBox, Button, Entry, Label, ListBox, ListBoxRow, ScrolledWindow, Orientation};
+use gtk::{Box as GtkBox, Button, Entry, Label, ListBox, ListBoxRow, Orientation, ScrolledWindow};
 
 use shanti_paths;
 
@@ -77,7 +77,9 @@ impl AutoCorrectDialog {
         overlay.set_child(Some(&content));
         window.set_content(Some(&overlay));
 
-        let user_path = shanti_paths::user_data_dir().join("data").join("autocorrect.json");
+        let user_path = shanti_paths::user_data_dir()
+            .join("data")
+            .join("autocorrect.json");
 
         // Load entries
         let entries = std::cell::RefCell::new(Self::load_entries(&user_path));
@@ -203,9 +205,15 @@ impl AutoCorrectDialog {
             let _ = std::fs::create_dir_all(parent);
         }
         let obj: serde_json::Value = serde_json::Value::Object(
-            entries.iter().map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone()))).collect()
+            entries
+                .iter()
+                .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+                .collect(),
         );
-        let _ = std::fs::write(user_path, serde_json::to_string_pretty(&obj).unwrap_or_default());
+        let _ = std::fs::write(
+            user_path,
+            serde_json::to_string_pretty(&obj).unwrap_or_default(),
+        );
     }
 
     fn refresh_list(list_box: &ListBox, entries: &std::cell::RefCell<Vec<(String, String)>>) {

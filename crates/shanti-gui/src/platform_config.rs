@@ -38,9 +38,10 @@ pub fn is_app_indicator_enabled() -> bool {
     match output {
         Ok(out) if out.status.success() => {
             let text = String::from_utf8_lossy(&out.stdout);
-            text.lines()
-                .any(|l| l.contains("appindicatorsupport@rgcjonas.gmail.com")
-                    || l.contains("ubuntu-appindicators@ubuntu.com"))
+            text.lines().any(|l| {
+                l.contains("appindicatorsupport@rgcjonas.gmail.com")
+                    || l.contains("ubuntu-appindicators@ubuntu.com")
+            })
         }
         _ => false,
     }
@@ -53,17 +54,13 @@ pub fn should_show_tray_icon() -> bool {
 fn read_dconf_key(key: &str) -> String {
     let output = Command::new("dconf").args(["read", key]).output();
     match output {
-        Ok(out) if out.status.success() => {
-            String::from_utf8_lossy(&out.stdout).trim().to_string()
-        }
+        Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout).trim().to_string(),
         _ => String::new(),
     }
 }
 
 fn write_dconf_setting(key: &str, value: &str) -> bool {
-    let output = Command::new("dconf")
-        .args(["write", key, value])
-        .output();
+    let output = Command::new("dconf").args(["write", key, value]).output();
     matches!(output, Ok(out) if out.status.success())
 }
 
@@ -88,7 +85,10 @@ pub fn setup_gnome_input_source() {
         return;
     }
 
-    let first_source = sources.first().cloned().unwrap_or_else(|| "('xkb', 'us')".to_string());
+    let first_source = sources
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "('xkb', 'us')".to_string());
     let mut new_sources = sources;
     new_sources.push("('ibus', 'Shanti')".to_string());
 

@@ -1,12 +1,15 @@
 use std::rc::Rc;
 
-use adw::prelude::*;
-use adw::{PreferencesWindow, PreferencesPage, PreferencesGroup, ActionRow, ToggleSwitch, ComboRow, EntryRow};
-use gtk::{prelude::*, Button};
 use crate::auto_correct_dialog::AutoCorrectDialog;
+use adw::prelude::*;
+use adw::{
+    ActionRow, ComboRow, EntryRow, PreferencesGroup, PreferencesPage, PreferencesWindow,
+    ToggleSwitch,
+};
+use gtk::{prelude::*, Button};
 use shanti_config::Settings;
 
-use shanti_desktop::{install_files, remove_files, Paths, Error};
+use shanti_desktop::{install_files, remove_files, Error, Paths};
 
 /// A stub `ServiceControl` used until the GTK panel wires up a real
 /// DBus/systemd backend. It records calls so tests can assert on them.
@@ -43,7 +46,9 @@ pub struct SettingsDialog {
 
 impl SettingsDialog {
     pub fn new() -> Self {
-        let settings = Rc::new(std::cell::RefCell::new(Settings::load().unwrap_or_default()));
+        let settings = Rc::new(std::cell::RefCell::new(
+            Settings::load().unwrap_or_default(),
+        ));
         let service = Rc::new(StubService::default());
 
         let window = PreferencesWindow::new();
@@ -78,7 +83,11 @@ impl SettingsDialog {
         orientation.set_title("Candidate window orientation");
         orientation.append("Horizontal", "Horizontal");
         orientation.append("Vertical", "Vertical");
-        orientation.set_selected(if settings.borrow().candidate_win_horizontal { 0 } else { 1 });
+        orientation.set_selected(if settings.borrow().candidate_win_horizontal {
+            0
+        } else {
+            1
+        });
         general_group.add(&orientation);
 
         let include_english = ActionRow::new();
@@ -175,7 +184,11 @@ impl SettingsDialog {
         old_kar_order.set_title("Kar order");
         old_kar_order.append("Modern", "Modern");
         old_kar_order.append("Old", "Old");
-        old_kar_order.set_selected(if settings.borrow().fixed_old_kar_order { 1 } else { 0 });
+        old_kar_order.set_selected(if settings.borrow().fixed_old_kar_order {
+            1
+        } else {
+            0
+        });
         fixed_group.add(&old_kar_order);
 
         // ---- GNOME IBus Integration panel ----
@@ -214,7 +227,13 @@ impl SettingsDialog {
         let setup_button_c = setup_button.clone();
         let remove_button_c = remove_button.clone();
         setup_button.connect_clicked(move |_| {
-            Self::do_setup(&settings_c, &service_c, &status_row_c, &setup_button_c, &remove_button_c);
+            Self::do_setup(
+                &settings_c,
+                &service_c,
+                &status_row_c,
+                &setup_button_c,
+                &remove_button_c,
+            );
         });
 
         let settings_c2 = Rc::clone(&settings);
@@ -223,7 +242,13 @@ impl SettingsDialog {
         let setup_button_c2 = setup_button.clone();
         let remove_button_c2 = remove_button.clone();
         remove_button.connect_clicked(move |_| {
-            Self::do_remove(&settings_c2, &service_c2, &status_row_c2, &setup_button_c2, &remove_button_c2);
+            Self::do_remove(
+                &settings_c2,
+                &service_c2,
+                &status_row_c2,
+                &setup_button_c2,
+                &remove_button_c2,
+            );
         });
 
         Self {

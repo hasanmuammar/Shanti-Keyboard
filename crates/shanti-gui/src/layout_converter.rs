@@ -306,7 +306,10 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
         }
         // Extract element name
         let start = line.find('<').map(|i| i + 1).unwrap_or(0);
-        let end = line[start..].find('>').map(|i| start + i).unwrap_or(line.len());
+        let end = line[start..]
+            .find('>')
+            .map(|i| start + i)
+            .unwrap_or(line.len());
         let elem = &line[start..end];
         let elem = elem.trim_start_matches('/').trim();
 
@@ -339,17 +342,13 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
                     info_layout.insert("name".to_string(), Value::String(data.to_string()));
                 }
                 "LayoutVersion" => {
-                    info_layout
-                        .insert("version".to_string(), Value::String(data.to_string()));
+                    info_layout.insert("version".to_string(), Value::String(data.to_string()));
                 }
                 "DeveloperName" => {
                     layout_dev.insert("name".to_string(), Value::String(data.to_string()));
                 }
                 "DeveloperComment" => {
-                    layout_dev.insert(
-                        "comment".to_string(),
-                        Value::String(unescape_xml(data)),
-                    );
+                    layout_dev.insert("comment".to_string(), Value::String(unescape_xml(data)));
                 }
                 _ => {}
             }
@@ -405,10 +404,7 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
         return ConversionResult::UnsupportedLayout;
     }
 
-    info_layout.insert(
-        "developer".to_string(),
-        Value::Object(layout_dev),
-    );
+    info_layout.insert("developer".to_string(), Value::Object(layout_dev));
     let mut info = serde_json::Map::new();
     info.insert("layout".to_string(), Value::Object(info_layout));
     info.insert("type".to_string(), Value::String("fixed".to_string()));
@@ -441,7 +437,10 @@ fn convert_to_v3(layout: Value, save_path: &PathBuf) -> ConversionResult {
             let image0 = info_layout.remove("image0").unwrap();
             info_layout.insert("image".to_string(), image0);
         }
-        info.insert("type".to_string(), Value::String("transliteration".to_string()));
+        info.insert(
+            "type".to_string(),
+            Value::String("transliteration".to_string()),
+        );
     }
     // v3 no longer stores the Normal/AltGr instructional images for keyed layouts.
     info_layout.remove("image0");
