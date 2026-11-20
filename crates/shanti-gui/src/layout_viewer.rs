@@ -173,9 +173,7 @@ impl LayoutViewer {
         // Rust types wrapping the same C GdkPixbuf pointer; borrow the pointer
         // to construct gtk4's Pixbuf for Picture::for_pixbuf.
         let stash = pixbuf.to_glib_none();
-        let pixbuf = unsafe {
-            gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(stash.0 as *mut _)
-        };
+        let pixbuf = unsafe { gtk::gdk_pixbuf::Pixbuf::from_glib_ptr_borrow(stash.0 as *mut _) };
         let picture = Picture::for_pixbuf(&pixbuf);
         picture.set_hexpand(true);
         picture.set_vexpand(true);
