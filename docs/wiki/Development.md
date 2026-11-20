@@ -29,7 +29,7 @@ rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/shanti-keyboard/build"
 
 ## Testing
 
-The CI workflow builds the Flatpak on x86_64 and aarch64 and compiles the IBus portable variant across its configured compiler/architecture matrix. The package-test workflow checks shell syntax, archive/checksum integrity, archive paths and symlink containment, package contents, GUI startup with the offscreen Qt platform, data discovery, and uninstaller safety.
+The CI workflow builds the Flatpak on x86_64 and aarch64 and compiles the IBus portable variant across its configured compiler/architecture matrix. The package-test workflow checks shell syntax, archive/checksum integrity, archive paths and symlink containment, package contents, GUI startup with the offscreen GTK backend, data discovery, and uninstaller safety.
 
 These are build and packaging checks. They do not replace testing on a real desktop. For input-method changes, test at minimum:
 - GUI startup and settings persistence.

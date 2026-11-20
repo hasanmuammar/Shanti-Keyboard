@@ -4,7 +4,7 @@
 
 Shanti Keyboard is a Linux-only fork of OpenBangla Keyboard focused on GNOME and IBus. Fork development currently happens on `rust-rewrite`; Windows/macOS are out of scope. Fcitx-specific code and workflows are kept on the separate `fcitx-support` branch.
 
-Layout: `src/engine/ibus/` contains the C++ libibus shell, `crates/` contains the Rust settings (`shanti-config`), path (`shanti-paths`), engine (`shanti-core`) and keysym (`shanti-keysyms`) crates, `src/frontend/` contains the Qt5 GUI, `src/shared/` contains shared C++ utilities, and `data/` contains layouts and language data. The GNOME IBus Flatpak is `tools/flatpak/shanti-ibus.yml`; CI and release workflows are in `.github/workflows/`. Consult `docs/REWRITE-PLAN.md` before rewrite-adjacent work.
+Layout: `src/engine/ibus/` contains the C++ libibus shell, `crates/` contains the Rust settings (`shanti-config`), path (`shanti-paths`), engine (`shanti-core`) and keysym (`shanti-keysyms`) crates, and `data/` contains layouts and language data. The GTK4/libadwaita GUI lives in `crates/shanti-gui`; the GNOME IBus Flatpak is `tools/flatpak/shanti-ibus.yml`; CI and release workflows are in `.github/workflows/`. Consult `docs/REWRITE-PLAN.md` before rewrite-adjacent work.
 
 ## Naming
 
@@ -49,7 +49,7 @@ cbindgen --config cbindgen.toml --output include/platform.h
 
 - `.github/workflows/ci.yml` builds the GNOME IBus Flatpak for x86_64 and aarch64 and compiles IBus source builds.
 - `.github/workflows/package-test.yml` checks shell syntax, archive integrity, package contents, GUI startup and data discovery.
-- For GUI smoke checks, use `QT_QPA_PLATFORM=offscreen` with `shanti-gui --version` and `shanti-gui --check-data`.
+- For GUI smoke checks, use `GTK_A11Y=none` with `shanti-gui --version` and `shanti-gui --check-data`.
 - Engine behavior changes require typing Bangla through IBus in a real GNOME session; CI cannot verify input delivery.
 - Flatpak builds use `tools/flatpak/shanti-ibus.yml`. On atomic desktops, `appstreamcli compose` may need the distro AppStream tools; see the shanti-alpha.1.4 changelog entry and `docs/wiki/Development.md`.
 - Keep the Flatpak Builder state directory on the same filesystem as its target directory.

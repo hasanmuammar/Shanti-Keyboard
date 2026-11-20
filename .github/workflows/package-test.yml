@@ -29,7 +29,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config rustc cargo libzstd-dev qtbase5-dev qtbase5-dev-tools libqt5svg5-dev libibus-1.0-dev ca-certificates
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config rustc cargo libzstd-dev libgtk4-dev libadwaita-1-dev libibus-1.0-dev ca-certificates
 
       - name: Check shell syntax
         run: |

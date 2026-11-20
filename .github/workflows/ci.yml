@@ -109,9 +109,6 @@ jobs:
             rustc \
             cargo \
             libzstd-dev \
-            qtbase5-dev \
-            qtbase5-dev-tools \
-            libqt5svg5-dev \
             libibus-1.0-dev \
             ca-certificates
 

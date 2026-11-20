@@ -8,7 +8,7 @@ Remove the current-user installation:
 bash tools/uninstall.sh
 ```
 
-The uninstaller removes Shanti's installed binaries, bundled runtime, desktop entry, icons, metadata, IBus registration and fork-specific environment configuration. It cleans the current Shanti names and the legacy pre-rebrand names (`openbangla-gui`, `ibus-engine-openbangla`, `openbangla-keyboard`, `org.freedesktop.IBus.OpenBangla` registration). It does not remove the source checkout or system-wide IBus, Qt, compilers or other shared packages.
+The uninstaller removes Shanti's installed binaries, bundled runtime, desktop entry, icons, metadata, IBus registration and fork-specific environment configuration. It cleans the current Shanti names and the legacy pre-rebrand names (`openbangla-gui`, `ibus-engine-openbangla`, `openbangla-keyboard`, `org.freedesktop.IBus.OpenBangla` registration). It does not remove the source checkout or system-wide IBus, GTK, compilers or other shared packages.
 
 **User data is preserved by default.** The ordinary uninstall does not purge personal settings/layout data or the cache. Review the script's prompts and options before requesting deletion:
 

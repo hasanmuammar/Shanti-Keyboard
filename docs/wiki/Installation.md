@@ -17,7 +17,7 @@ Install the bundle:
 flatpak install --user ./shanti-ibus-x86_64.flatpak
 ```
 
-Flatpak should fetch the required KDE runtime (`org.kde.Platform//5.15-25.08`) from Flathub automatically. Use the `aarch64` bundle on ARM64. Keep the scope consistent: use `--user` for both commands, or omit it for both to install system-wide. If Flatpak says the runtime was not found, install it explicitly with `flatpak install --user flathub org.kde.Platform//5.15-25.08` (omit `--user` for system scope). Launch the app and accept the first-run integration prompt. Then add **Shanti** from **GNOME Settings → Keyboard → Input Sources → Add Input Source**.
+Flatpak should fetch the required GNOME runtime (`org.gnome.Platform//51`) from Flathub automatically. Use the `aarch64` bundle on ARM64. Keep the scope consistent: use `--user` for both commands, or omit it for both to install system-wide. If Flatpak says the runtime was not found, install it explicitly with `flatpak install --user flathub org.gnome.Platform//51` (omit `--user` for system scope). Launch the app and accept the first-run integration prompt. Then add **Shanti** from **GNOME Settings → Keyboard → Input Sources → Add Input Source**.
 
 See the [Flatpak guide](../../tools/flatpak/README.md) for screenshots-free step-by-step setup, verification and removal instructions.
 

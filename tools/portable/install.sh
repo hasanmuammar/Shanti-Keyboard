@@ -347,7 +347,6 @@ confirm_install_replacements() {
 
     for path in \
         "$OBK_PREFIX/bin/shanti-gui" \
-        "$OBK_PREFIX/bin/qt.conf" \
         "$OBK_PREFIX/bin/shanti-gui.bin" \
         "$OBK_PREFIX/libexec/ibus-engine-shanti" \
         "$OBK_PREFIX/libexec/ibus-engine-shanti.bin" \

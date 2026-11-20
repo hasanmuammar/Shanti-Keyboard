@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-[[ $# -eq 4 ]] || {
-    echo "Usage: bundle-runtime.sh RUNTIME_LIB_DIR RUNTIME_PLUGIN_DIR STAGE_DIR QT_LIB_DIR" >&2
+[[ $# -eq 3 ]] || {
+    echo "Usage: bundle-runtime.sh RUNTIME_LIB_DIR RUNTIME_PLUGIN_DIR STAGE_DIR" >&2
     exit 2
 }
 
 runtime_lib_dir="$1"
 runtime_plugin_dir="$2"
 stage_dir="$3"
-qt_lib_dir="$4"
 
 [[ "$stage_dir" == /* && "$stage_dir" != "/" && -d "$stage_dir" && ! -L "$stage_dir" ]] || {
     echo "Refusing to bundle runtime into an invalid staging directory: $stage_dir" >&2
@@ -116,5 +115,5 @@ while ((${#queue[@]})); do
         fi
 
         enqueue "$target"
-    done < <(LD_LIBRARY_PATH="$runtime_lib_dir:$qt_lib_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ldd "$library" 2>/dev/null)
+    done < <(LD_LIBRARY_PATH="$runtime_lib_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ldd "$library" 2>/dev/null)
 done

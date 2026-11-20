@@ -28,7 +28,6 @@ build_shanti() {
                 $sudo_cmd apt-get install -y --no-install-recommends \
                     g++ cmake ninja-build pkg-config \
                     rustc cargo libzstd-dev \
-                    qtbase5-dev qtbase5-dev-tools libqt5svg5-dev \
                     ca-certificates curl
 
                 $sudo_cmd update-ca-certificates
@@ -37,8 +36,7 @@ build_shanti() {
             elif command -v dnf >/dev/null 2>&1; then
                 $sudo_cmd dnf install -y \
                     gcc gcc-c++ cmake ninja-build pkgconf-pkg-config \
-                    rust cargo libzstd-devel \
-                    qt5-qtbase-devel qt5-qtsvg-devel ca-certificates curl
+                    rust cargo libzstd-devel ca-certificates curl
 
                 $sudo_cmd dnf install -y ibus-devel
 
@@ -96,46 +94,9 @@ build_shanti() {
 
         DESTDIR="$stage_dir" cmake --install "$build_dir"
 
-        if command -v qmake >/dev/null 2>&1; then
-            qt_query_tool=qmake
-        elif command -v qmake-qt5 >/dev/null 2>&1; then
-            qt_query_tool=qmake-qt5
-        elif command -v qtpaths >/dev/null 2>&1; then
-            qt_query_tool=qtpaths
-        elif command -v qtpaths-qt5 >/dev/null 2>&1; then
-            qt_query_tool=qtpaths-qt5
-        else
-            echo "Qt5 query tool (qmake/qtpaths) was not found." >&2
-            exit 1
-        fi
-
-        qt_lib_dir="$("$qt_query_tool" -query QT_INSTALL_LIBS)"
-        qt_plugin_dir="$("$qt_query_tool" -query QT_INSTALL_PLUGINS)"
-        runtime_lib_dir="$stage_dir$HOME/.local/lib/shanti"
-        runtime_plugin_dir="$runtime_lib_dir/qt5/plugins"
-
-        mkdir -p "$runtime_lib_dir" "$runtime_plugin_dir"
-        for library in \
-            libQt5Core.so.5 \
-            libQt5Gui.so.5 \
-            libQt5Widgets.so.5 \
-            libQt5Network.so.5 \
-            libQt5Svg.so.5 \
-            libQt5XcbQpa.so.5; do
-            cp -a "$qt_lib_dir/$library"* "$runtime_lib_dir/"
-        done
-
-        cp -a "$qt_plugin_dir/platforms" "$runtime_plugin_dir/"
-
         "$source_dir/tools/portable/bundle-runtime.sh" \
             "$runtime_lib_dir" \
             "$runtime_plugin_dir" \
-            "$stage_dir" \
-            "$qt_lib_dir"
-
-        cat > "$stage_dir$HOME/.local/bin/qt.conf" <<EOF
-[Paths]
-Plugins=../lib/shanti/qt5/plugins
-EOF
+            "$stage_dir"
     '
 }
