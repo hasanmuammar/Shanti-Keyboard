@@ -5,6 +5,7 @@ use gtk::{Box as GtkBox, Button, GestureClick, Window};
 pub struct TopBar {
     pub window: Window,
     pub icon_btn: Button,
+    #[allow(dead_code)]
     pub layout_btn: Button,
     pub view_btn: Button,
     pub settings_btn: Button,
@@ -82,6 +83,7 @@ impl TopBar {
         }
     }
 
+    #[allow(dead_code)]
     pub fn window(&self) -> &Window {
         &self.window
     }

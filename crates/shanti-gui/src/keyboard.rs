@@ -85,83 +85,78 @@ impl KeyboardState {
             }
         };
 
-        let mut rows: Vec<Vec<Key>> = Vec::new();
-
-        rows.push(vec![
-            sym("`", "~", "Key_Grave", "Key_Tilde", 1.0),
-            sym("1", "!", "Key_1", "Key_Exclaim", 1.0),
-            sym("2", "@", "Key_2", "Key_At", 1.0),
-            sym("3", "#", "Key_3", "Key_Hash", 1.0),
-            sym("4", "$", "Key_4", "Key_Dollar", 1.0),
-            sym("5", "%", "Key_5", "Key_Percent", 1.0),
-            sym("6", "^", "Key_6", "Key_Circum", 1.0),
-            sym("7", "&", "Key_7", "Key_Ampersand", 1.0),
-            sym("8", "*", "Key_8", "Key_Asterisk", 1.0),
-            sym("9", "(", "Key_9", "Key_ParenLeft", 1.0),
-            sym("0", ")", "Key_0", "Key_ParenRight", 1.0),
-            sym("-", "_", "Key_Minus", "Key_UnderScore", 1.0),
-            sym("=", "+", "Key_Equals", "Key_Plus", 1.0),
-            mod_key(2.0, "Backspace"),
-        ]);
-
-        rows.push(vec![
-            mod_key(1.5, "Tab"),
-            letter('Q'),
-            letter('W'),
-            letter('E'),
-            letter('R'),
-            letter('T'),
-            letter('Y'),
-            letter('U'),
-            letter('I'),
-            letter('O'),
-            letter('P'),
-            sym("[", "{", "Key_BracketLeft", "Key_BraceLeft", 1.0),
-            sym("]", "}", "Key_BracketRight", "Key_BraceRight", 1.0),
-            sym("\\", "|", "Key_BackSlash", "Key_Bar", 1.5),
-        ]);
-
-        rows.push(vec![
-            mod_key(1.75, "Caps Lock"),
-            letter('A'),
-            letter('S'),
-            letter('D'),
-            letter('F'),
-            letter('G'),
-            letter('H'),
-            letter('J'),
-            letter('K'),
-            letter('L'),
-            sym(";", ":", "Key_Semicolon", "Key_Colon", 1.0),
-            sym("'", "\"", "Key_Apostrophe", "Key_Quote", 1.0),
-            mod_key(2.25, "Enter"),
-        ]);
-
-        rows.push(vec![
-            mod_key(2.25, "Shift"),
-            letter('Z'),
-            letter('X'),
-            letter('C'),
-            letter('V'),
-            letter('B'),
-            letter('N'),
-            letter('M'),
-            sym(",", "<", "Key_Comma", "Key_Less", 1.0),
-            sym(".", ">", "Key_Period", "Key_Greater", 1.0),
-            sym("/", "?", "Key_Slash", "Key_Question", 1.0),
-            mod_key(2.75, "Shift"),
-        ]);
-
-        rows.push(vec![
-            mod_key(1.25, "Ctrl"),
-            mod_key(1.25, "Win"),
-            mod_key(1.25, "Alt"),
-            mod_key(6.25, ""),
-            mod_key(1.25, "Alt"),
-            mod_key(1.25, "Menu"),
-            mod_key(1.25, "Ctrl"),
-        ]);
-
+        let rows: Vec<Vec<Key>> = vec![
+            vec![
+                sym("`", "~", "Key_Grave", "Key_Tilde", 1.0),
+                sym("1", "!", "Key_1", "Key_Exclaim", 1.0),
+                sym("2", "@", "Key_2", "Key_At", 1.0),
+                sym("3", "#", "Key_3", "Key_Hash", 1.0),
+                sym("4", "$", "Key_4", "Key_Dollar", 1.0),
+                sym("5", "%", "Key_5", "Key_Percent", 1.0),
+                sym("6", "^", "Key_6", "Key_Circum", 1.0),
+                sym("7", "&", "Key_7", "Key_Ampersand", 1.0),
+                sym("8", "*", "Key_8", "Key_Asterisk", 1.0),
+                sym("9", "(", "Key_9", "Key_ParenLeft", 1.0),
+                sym("0", ")", "Key_0", "Key_ParenRight", 1.0),
+                sym("-", "_", "Key_Minus", "Key_UnderScore", 1.0),
+                sym("=", "+", "Key_Equals", "Key_Plus", 1.0),
+                mod_key(2.0, "Backspace"),
+            ],
+            vec![
+                mod_key(1.5, "Tab"),
+                letter('Q'),
+                letter('W'),
+                letter('E'),
+                letter('R'),
+                letter('T'),
+                letter('Y'),
+                letter('U'),
+                letter('I'),
+                letter('O'),
+                letter('P'),
+                sym("[", "{", "Key_BracketLeft", "Key_BraceLeft", 1.0),
+                sym("]", "}", "Key_BracketRight", "Key_BraceRight", 1.0),
+                sym("\\", "|", "Key_BackSlash", "Key_Bar", 1.5),
+            ],
+            vec![
+                mod_key(1.75, "Caps Lock"),
+                letter('A'),
+                letter('S'),
+                letter('D'),
+                letter('F'),
+                letter('G'),
+                letter('H'),
+                letter('J'),
+                letter('K'),
+                letter('L'),
+                sym(";", ":", "Key_Semicolon", "Key_Colon", 1.0),
+                sym("'", "\"", "Key_Apostrophe", "Key_Quote", 1.0),
+                mod_key(2.25, "Enter"),
+            ],
+            vec![
+                mod_key(2.25, "Shift"),
+                letter('Z'),
+                letter('X'),
+                letter('C'),
+                letter('V'),
+                letter('B'),
+                letter('N'),
+                letter('M'),
+                sym(",", "<", "Key_Comma", "Key_Less", 1.0),
+                sym(".", ">", "Key_Period", "Key_Greater", 1.0),
+                sym("/", "?", "Key_Slash", "Key_Question", 1.0),
+                mod_key(2.75, "Shift"),
+            ],
+            vec![
+                mod_key(1.25, "Ctrl"),
+                mod_key(1.25, "Win"),
+                mod_key(1.25, "Alt"),
+                mod_key(6.25, ""),
+                mod_key(1.25, "Alt"),
+                mod_key(1.25, "Menu"),
+                mod_key(1.25, "Ctrl"),
+            ],
+        ];
         rows
     }
 
@@ -265,7 +260,7 @@ impl KeyboardWidget {
         for (key, value) in keymap.iter() {
             if key.ends_with("_AltGr") && !value.is_empty() && {
                 let normal_key = format!("{}_Normal", key.trim_end_matches("_AltGr"));
-                keymap.get(&normal_key).map_or(true, |v| v != value)
+                keymap.get(&normal_key) != Some(value)
             } {
                 return true;
             }
@@ -283,6 +278,7 @@ impl Default for KeyboardWidget {
 #[derive(Clone, Copy)]
 enum HAlign {
     Left,
+    #[allow(dead_code)]
     Center,
     Right,
 }

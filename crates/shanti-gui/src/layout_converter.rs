@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
@@ -508,7 +508,7 @@ pub fn convert_layout_format_file(path: &PathBuf) -> ConversionResult {
 }
 
 /// Determine the user save path for a converted layout.
-fn user_save_path(path: &PathBuf) -> PathBuf {
+fn user_save_path(path: &Path) -> PathBuf {
     let user_data_dir = shanti_paths::user_data_dir();
     let layouts_dir = user_data_dir.join("layouts");
     let _ = std::fs::create_dir_all(&layouts_dir);

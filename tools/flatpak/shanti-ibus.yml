@@ -78,7 +78,6 @@ modules:
       - install -Dm644 data/64.png /app/share/icons/hicolor/64x64/apps/org.shanti.ShantiIbus.png
       - install -Dm644 data/128.png /app/share/icons/hicolor/128x128/apps/org.shanti.ShantiIbus.png
       - install -Dm644 data/512.png /app/share/icons/hicolor/512x512/apps/org.shanti.ShantiIbus.png
-      - install -Dm644 data/1024.png /app/share/icons/hicolor/1024x1024/apps/org.shanti.ShantiIbus.png || true
       # Metainfo: substitute id/name/icon, rename to IBus app id.
       - sed -e 's#<id>org.shanti.ShantiKeyboard</id>#<id>org.shanti.ShantiIbus</id>#' -e 's#<name>Shanti Keyboard</name>#<name>Shanti Keyboard (IBus)</name>#' -e 's#<icon type="remote"[^>]*>[^<]*</icon>#<icon type="stock">org.shanti.ShantiIbus</icon>#' data/org.shanti.ShantiKeyboard.metainfo.xml > /app/share/metainfo/org.shanti.ShantiIbus.metainfo.xml
     sources:

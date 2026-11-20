@@ -68,7 +68,7 @@ fn write_dconf_setting(key: &str, value: &str) -> bool {
 }
 
 fn parse_input_sources(raw: &str) -> Vec<String> {
-    let raw = raw.replace('[', "").replace(']', "");
+    let raw = raw.replace(['[', ']'], "");
     let mut sources = Vec::new();
     let mut remaining = raw.as_str();
     while let Some(idx) = remaining.find("),") {

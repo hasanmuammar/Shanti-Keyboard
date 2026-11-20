@@ -5,13 +5,14 @@ use gtk::{ScrolledWindow, TextView};
 use shanti_layout::LayoutDesc;
 
 pub struct AboutFile {
+    #[allow(dead_code)]
     pub window: Window,
 }
 
 impl AboutFile {
     pub fn new(desc: &LayoutDesc) -> Self {
         let window = Window::builder()
-            .title(&format!("About {}", desc.name))
+            .title(format!("About {}", desc.name))
             .modal(true)
             .default_width(460)
             .default_height(320)
