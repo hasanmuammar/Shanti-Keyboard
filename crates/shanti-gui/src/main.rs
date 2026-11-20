@@ -13,9 +13,8 @@ use std::process::ExitCode;
 
 use adw::prelude::*;
 use adw::{Application, ApplicationWindow, HeaderBar};
-use gtk::{gio, prelude::*, Box as GtkBox, Button, Label, Orientation};
+use gtk::{Box as GtkBox, Button, Label, Orientation};
 use shanti_config::Settings;
-use shanti_paths;
 
 const REQUIRED_FILES: &[&str] = &[
     "layouts/avrophonetic.json",
@@ -170,7 +169,7 @@ fn run() -> ExitCode {
                     about_file::AboutFile::new(desc);
                 }
             });
-            dialog.set_content(Some(&viewer.widget().clone()));
+            dialog.set_content(Some(&viewer.content().clone()));
             dialog.present();
         });
 
@@ -182,7 +181,7 @@ fn run() -> ExitCode {
         content.append(&body);
 
         let window = ApplicationWindow::builder()
-            .application(application)
+            .application(&application)
             .title("Shanti Keyboard")
             .default_width(560)
             .default_height(360)
@@ -214,7 +213,7 @@ fn run() -> ExitCode {
                     about_file::AboutFile::new(desc);
                 }
             });
-            dialog.set_content(Some(&viewer.widget().clone()));
+            dialog.set_content(Some(&viewer.content().clone()));
             dialog.present();
         });
 
@@ -228,7 +227,6 @@ fn run() -> ExitCode {
         });
 
         top_bar.present();
-
         top_bar.icon_btn.connect_clicked(move |_| {
             let dialog = about_dialog::AboutDialog::new();
             dialog.window.present();

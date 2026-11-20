@@ -47,6 +47,9 @@ pub fn is_app_indicator_enabled() -> bool {
     }
 }
 
+/// AppIndicator support detection, kept for the tray task. GNOME hides
+/// traditional tray icons unless one of these extensions is enabled.
+#[allow(dead_code)]
 pub fn should_show_tray_icon() -> bool {
     detect_desktop_environment() != DesktopEnvironment::Gnome || is_app_indicator_enabled()
 }

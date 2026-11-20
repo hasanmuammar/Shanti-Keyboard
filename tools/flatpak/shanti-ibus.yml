@@ -50,7 +50,10 @@ modules:
       # Lint and test the GTK GUI before installing it as the production launcher.
       - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
       - cargo test --locked --manifest-path crates/shanti-gui/Cargo.toml
-      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml -- -D warnings
+      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml --all-targets -- -D warnings
+      - cargo fmt --check --manifest-path crates/shanti-layout/Cargo.toml
+      - cargo test --locked --manifest-path crates/shanti-layout/Cargo.toml
+      - cargo clippy --locked --manifest-path crates/shanti-layout/Cargo.toml --all-targets -- -D warnings
       # Build the GTK GUI via cargo and install as `shanti-gui` (binary-name contract).
       - SHANTI_VERSION="$(cat version.txt)" cargo build --locked --release --manifest-path crates/shanti-gui/Cargo.toml
       - install -Dm755 /run/build/shanti-keyboard/cargo-target/release/shanti-gui-rust /app/bin/shanti-gui
@@ -59,6 +62,8 @@ modules:
       - install -m644 data/avrophonetic.json data/Avro_Easy.json data/Borno.json data/Munir_Optima.json data/National_Jatiya.json data/Probhat.json data/UniBijoy.json data/khipro.json /app/share/shanti-keyboard/layouts/
       - install -m644 src/engine/riti/data/autocorrect.json /app/share/shanti-keyboard/data/autocorrect.json
       - install -m644 data/dictionary.json data/suffix.json data/regex.json /app/share/shanti-keyboard/data/
+      # Bundled Bangla font for the fixed-layout keyboard viewer.
+      - install -Dm644 data/kalpurush.ttf /app/share/fonts/kalpurush.ttf
     post-install:
       # Desktop entry: substitute @BIN_DIR@, rename to IBus app id, apply sed renames.
       - sed -e 's#@BIN_DIR@#/app/bin#g' data/shanti-keyboard.desktop.in > /app/share/applications/shanti-keyboard.desktop

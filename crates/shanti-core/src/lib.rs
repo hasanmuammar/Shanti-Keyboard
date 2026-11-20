@@ -9,6 +9,7 @@
 
 mod engine;
 mod ffi;
+pub mod preview;
 mod settings;
 
 pub use engine::{KeyAction, ShantiCore};

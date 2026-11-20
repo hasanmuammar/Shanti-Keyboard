@@ -1,7 +1,6 @@
 use adw::prelude::*;
 use adw::Window;
-use gtk::prelude::*;
-use gtk::{Label, ScrolledWindow, TextView};
+use gtk::{ScrolledWindow, TextView};
 
 use shanti_layout::LayoutDesc;
 

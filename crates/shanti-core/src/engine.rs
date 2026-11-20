@@ -7,7 +7,7 @@
 //! whatever this core decides, through the C ABI in `ffi.rs`.
 
 use riti::config::Config;
-use riti::context::{MODIFIER_ALT_GR, MODIFIER_SHIFT, RitiContext};
+use riti::context::{RitiContext, MODIFIER_ALT_GR, MODIFIER_SHIFT};
 use riti::suggestion::Suggestion;
 use shanti_keysyms::VC_UNKNOWN_VALUE;
 
@@ -205,6 +205,20 @@ impl ShantiCore {
         &self.last_committed
     }
 
+    /// Commit the pending suggestion and return the committed text, ending
+    /// the input session. This is the shell-independent commit used by the
+    /// GTK AutoCorrect preview (`shanti_core::preview`), which types a string
+    /// and needs its conversion without an application-side key event.
+    pub fn commit_text(&mut self) -> String {
+        if !self.ctx.ongoing_input_session() {
+            self.last_committed.clear();
+            return String::new();
+        }
+        self.commit_internal();
+        self.suggestion = None;
+        std::mem::take(&mut self.last_committed)
+    }
+
     /// Preedit text for the shell to render (`get_pre_edit_text(selection)`
     /// semantics). Empty unless a session suggestion exists.
     pub fn preedit_text(&self) -> String {
@@ -378,7 +392,9 @@ impl ShantiCore {
 
         // Reject the key which has only Ctrl or Alt (not the right one)
         // combination and riti doesn't handle.
-        if (ctrl_key && !alt_key) || (!ctrl_key && alt_key && !self.altgr) || key == VC_UNKNOWN_VALUE
+        if (ctrl_key && !alt_key)
+            || (!ctrl_key && alt_key && !self.altgr)
+            || key == VC_UNKNOWN_VALUE
         {
             if self.ctx.ongoing_input_session() {
                 self.commit_internal();
@@ -399,7 +415,9 @@ impl ShantiCore {
             0
         };
 
-        let suggestion = self.ctx.get_suggestion_for_key(key, modifier, selection as u8);
+        let suggestion = self
+            .ctx
+            .get_suggestion_for_key(key, modifier, selection as u8);
         let ongoing = self.ctx.ongoing_input_session();
         let empty = suggestion.is_empty();
 
@@ -409,7 +427,11 @@ impl ShantiCore {
             // Corner case: when old style kar typing is enabled, a lonely
             // suggestion and an empty suggestion are not distinguishable. So
             // we accept the key event if a session is ongoing.
-            return if ongoing { KeyAction::Swallow } else { KeyAction::PassThrough };
+            return if ongoing {
+                KeyAction::Swallow
+            } else {
+                KeyAction::PassThrough
+            };
         }
 
         self.sync_selection_from_suggestion();
@@ -433,7 +455,10 @@ impl ShantiCore {
     }
 
     fn suggestion_is_lonely(&self) -> bool {
-        self.suggestion.as_ref().map(|s| s.is_lonely()).unwrap_or(true)
+        self.suggestion
+            .as_ref()
+            .map(|s| s.is_lonely())
+            .unwrap_or(true)
     }
 
     fn modifier_action(&self) -> KeyAction {
@@ -447,7 +472,9 @@ impl ShantiCore {
     /// After a fresh suggestion arrives, adopt its remembered selection like
     /// `ibus_lookup_table_set_cursor_pos(prev_selection)` did.
     fn sync_selection_from_suggestion(&mut self) {
-        self.selection = self.previously_selected_index().min(self.candidate_count().max(1) - 1);
+        self.selection = self
+            .previously_selected_index()
+            .min(self.candidate_count().max(1) - 1);
     }
 }
 
@@ -473,7 +500,9 @@ mod tests {
             actions.push(c.key_event(key, 0));
         }
         assert!(
-            actions.iter().all(|a| matches!(a, KeyAction::UpdateCandidates)),
+            actions
+                .iter()
+                .all(|a| matches!(a, KeyAction::UpdateCandidates)),
             "phonetic letters must drive candidate updates: {actions:?}"
         );
 
@@ -488,7 +517,10 @@ mod tests {
         assert!(c.ctx.ongoing_input_session());
 
         // Backspace trims the composition but keeps the session going.
-        assert!(matches!(c.key_event(keysym::BACK_SPACE, 0), KeyAction::UpdateCandidates));
+        assert!(matches!(
+            c.key_event(keysym::BACK_SPACE, 0),
+            KeyAction::UpdateCandidates
+        ));
         assert!(c.ctx.ongoing_input_session());
 
         // Enter commits the selected candidate.
@@ -496,7 +528,10 @@ mod tests {
         assert!(matches!(action, KeyAction::Commit { .. }), "{action:?}");
         let committed = c.last_committed();
         assert!(!committed.is_empty());
-        assert!(!c.ctx.ongoing_input_session(), "session must end after commit");
+        assert!(
+            !c.ctx.ongoing_input_session(),
+            "session must end after commit"
+        );
     }
 
     #[test]
@@ -514,7 +549,10 @@ mod tests {
         // behaves like the old engine's cfg_bool default: forwarded too.
         c.key_event(104, 0);
         let action = c.key_event(keysym::RETURN, 0);
-        assert!(matches!(action, KeyAction::Commit { pass_after: true }), "{action:?}");
+        assert!(
+            matches!(action, KeyAction::Commit { pass_after: true }),
+            "{action:?}"
+        );
     }
 
     #[test]

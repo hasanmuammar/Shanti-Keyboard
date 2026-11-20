@@ -3,7 +3,7 @@
 //! [`shanti_core_string_free`], opaque handles, hand-written header
 //! (`include/shanti-core.h`).
 
-use std::ffi::{CString, c_char, c_int};
+use std::ffi::{c_char, c_int, CString};
 
 use crate::engine::{KeyAction, ShantiCore};
 
@@ -93,7 +93,11 @@ pub unsafe extern "C" fn shanti_core_reset_state(core: *mut ShantiCore) {
 
 /// Process a key event; returns one of the `SHANTI_KEY_*` action codes.
 #[no_mangle]
-pub unsafe extern "C" fn shanti_core_key_event(core: *mut ShantiCore, keyval: u32, state: u32) -> c_int {
+pub unsafe extern "C" fn shanti_core_key_event(
+    core: *mut ShantiCore,
+    keyval: u32,
+    state: u32,
+) -> c_int {
     encode_action(borrow(core).key_event(keyval, state))
 }
 
@@ -162,7 +166,10 @@ pub unsafe extern "C" fn shanti_core_last_committed_text(core: *mut ShantiCore) 
 /// (hide window + swallow). The committed text is readable through
 /// [`shanti_core_last_committed_text`].
 #[no_mangle]
-pub unsafe extern "C" fn shanti_core_candidate_clicked(core: *mut ShantiCore, index: c_int) -> c_int {
+pub unsafe extern "C" fn shanti_core_candidate_clicked(
+    core: *mut ShantiCore,
+    index: c_int,
+) -> c_int {
     encode_action(borrow(core).candidate_clicked(index.max(0) as usize))
 }
 

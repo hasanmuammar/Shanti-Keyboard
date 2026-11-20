@@ -1,6 +1,6 @@
 use adw::prelude::*;
-use gtk::prelude::*;
-use gtk::{Box as GtkBox, Button, EventControllerMotion, GestureClick, Window};
+use gtk::gdk;
+use gtk::{Box as GtkBox, Button, GestureClick, Window};
 
 pub struct TopBar {
     pub window: Window,
@@ -9,8 +9,6 @@ pub struct TopBar {
     pub view_btn: Button,
     pub settings_btn: Button,
     pub shutdown_btn: Button,
-    drag_offset: std::cell::Cell<(i32, i32)>,
-    dragging: std::cell::Cell<bool>,
 }
 
 impl TopBar {
@@ -52,32 +50,27 @@ impl TopBar {
 
         window.set_child(Some(&content));
 
-        // Drag-to-move: track press offset and motion delta
-        let drag_offset = std::cell::Cell::new((0, 0));
-        let dragging = std::cell::Cell::new(false);
-        let window_c = window.clone();
-
+        // Frameless windows have no titlebar to grab, so let a press anywhere
+        // on the bar start a compositor move — the GTK4 equivalent of the Qt
+        // TopBar's manual drag handling.
         let click = GestureClick::new();
-        click.connect_pressed(move |_gesture, _n, x, y| {
-            drag_offset.set((x as i32, y as i32));
-            dragging.set(true);
+        let window_c = window.clone();
+        click.connect_pressed(move |gesture, _n_press, x, y| {
+            let (Some(device), Some(surface)) =
+                (gesture.current_event_device(), window_c.surface())
+            else {
+                return;
+            };
+            let Some(toplevel) = surface.downcast_ref::<gdk::Toplevel>() else {
+                return;
+            };
+            let time = gesture
+                .current_event()
+                .map(|event| event.time())
+                .unwrap_or_default();
+            toplevel.begin_move(&device, gesture.current_button() as i32, x, y, time);
         });
         window.add_controller(click);
-
-        let dragging_c = dragging.clone();
-        let _window_c2 = window.clone();
-        let motion = EventControllerMotion::new();
-        motion.connect_motion(move |_ctrl, _x, _y| {
-            if dragging_c.get() {
-                // Frameless window dragging requires a Fixed container; skip here.
-            }
-        });
-        window.add_controller(motion);
-
-        let dragging_c2 = dragging.clone();
-        click.connect_released(move |_gesture, _n, _x, _y| {
-            dragging_c2.set(false);
-        });
 
         Self {
             window,
@@ -86,8 +79,6 @@ impl TopBar {
             view_btn,
             settings_btn,
             shutdown_btn,
-            drag_offset,
-            dragging,
         }
     }
 

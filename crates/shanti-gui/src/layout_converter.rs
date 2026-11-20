@@ -1,9 +1,14 @@
+//! Layout converter port.
+//!
+//! The dialog entry point is not wired into the GTK shell yet (the retired Qt
+//! `LayoutConverter` was reached from the layout viewer's toolbar). Keep the
+//! port compiled and tested until that action lands.
+#![allow(dead_code)]
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use serde_json::Value;
-
-use shanti_paths;
 
 /// Result of a layout conversion operation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -295,7 +300,6 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
     let mut info_layout = serde_json::Map::new();
     let mut layout_dev = serde_json::Map::new();
     let mut keys = serde_json::Map::new();
-    let mut avro_version = String::new();
     let mut unsupported = false;
 
     // Very simple element scan — handles the flat Avro XML structure.
@@ -327,8 +331,7 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
         };
 
         if elem == "AvroKeyboardVersion" {
-            avro_version = data.to_string();
-            if avro_version != "5" {
+            if data != "5" {
                 unsupported = true;
                 break;
             }
@@ -419,7 +422,7 @@ fn convert_avro_layout(xml_text: &str, save_path: &PathBuf) -> ConversionResult 
 /// Normalize a layout object into format version 3 and save it.
 fn convert_to_v3(layout: Value, save_path: &PathBuf) -> ConversionResult {
     let mut layout = layout;
-    let info = layout
+    let mut info = layout
         .get_mut("info")
         .and_then(Value::as_object_mut)
         .cloned()

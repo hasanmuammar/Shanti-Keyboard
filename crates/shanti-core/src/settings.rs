@@ -34,11 +34,15 @@ pub fn map_store(config: &mut RitiConfig, store: &Store) -> Viewport {
         // back and would abort the whole input method on an empty config.
         let fallback = bundled_layout_fallback();
         if config.set_layout_file_path(&fallback) {
-            eprintln!("[IM:Shanti core]: Falling back to bundled layout {}", fallback);
+            eprintln!(
+                "[IM:Shanti core]: Falling back to bundled layout {}",
+                fallback
+            );
         }
     }
 
-    config.set_suggestion_include_english(store.get_bool("settings/PreviewWin/IncludeEnglish", true));
+    config
+        .set_suggestion_include_english(store.get_bool("settings/PreviewWin/IncludeEnglish", true));
     config.set_phonetic_suggestion(store.get_bool("settings/CandidateWin/Phonetic", true));
 
     // riti's premature defaults still point the user data tree at the legacy
@@ -53,7 +57,10 @@ pub fn map_store(config: &mut RitiConfig, store: &Store) -> Viewport {
     // prefixes its suffix/auto-correct filenames onto it.
     let database_dir = shanti_paths::engine_data_dir().join("data");
     if !config.set_database_dir(database_dir.to_string_lossy().as_ref()) {
-        setting_error("database directory", database_dir.to_string_lossy().as_ref());
+        setting_error(
+            "database directory",
+            database_dir.to_string_lossy().as_ref(),
+        );
     }
 
     let viewport = Viewport {

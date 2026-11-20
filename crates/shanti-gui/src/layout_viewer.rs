@@ -1,24 +1,21 @@
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use adw::prelude::*;
 use adw::ViewStack;
-use gdk_pixbuf;
-use gtk::prelude::*;
 use gtk::{Box as GtkBox, Button, Label, Orientation, Picture};
 
-use crate::keyboard::KeyboardWidget;
+use crate::keyboard::{KeyboardWidget, Mode};
 use shanti_layout::{decode_image, LayoutFile, LayoutKind};
 
 #[derive(Clone)]
 pub struct LayoutViewer {
-    pub stack: ViewStack,
+    content: GtkBox,
+    stack: ViewStack,
     keyboard_widget: Rc<KeyboardWidget>,
     image_box: GtkBox,
     normal_button: Button,
     altgr_button: Button,
     about_button: Button,
-    header_box: GtkBox,
     current_desc: Option<shanti_layout::LayoutDesc>,
 }
 
@@ -42,7 +39,7 @@ impl LayoutViewer {
         header_box.set_margin_start(6);
         header_box.set_margin_end(6);
         header_box.set_margin_bottom(6);
-        header_box.set_visible(false);
+        header_box.set_halign(gtk::Align::End);
 
         let normal_button = Button::with_label("Normal");
         normal_button.add_css_class("flat");
@@ -60,35 +57,48 @@ impl LayoutViewer {
         header_box.append(&altgr_button);
         header_box.append(&about_button);
 
+        // Layer switching is internal to the viewer, like the Qt header bar's
+        // exclusive view buttons.
+        let keyboard_c = Rc::clone(&keyboard_widget);
+        let normal_c = normal_button.clone();
+        let altgr_c = altgr_button.clone();
+        normal_button.connect_clicked(move |_| {
+            keyboard_c.set_mode(Mode::Normal);
+            normal_c.add_css_class("raised");
+            altgr_c.remove_css_class("raised");
+        });
+
+        let keyboard_c2 = Rc::clone(&keyboard_widget);
+        let normal_c2 = normal_button.clone();
+        let altgr_c2 = altgr_button.clone();
+        altgr_button.connect_clicked(move |_| {
+            keyboard_c2.set_mode(Mode::AltGr);
+            altgr_c2.add_css_class("raised");
+            normal_c2.remove_css_class("raised");
+        });
+
         stack.set_hhomogeneous(false);
         stack.set_vhomogeneous(false);
 
+        let content = GtkBox::new(Orientation::Vertical, 0);
+        content.append(&header_box);
+        content.append(&stack);
+
         Self {
+            content,
             stack,
             keyboard_widget,
             image_box,
             normal_button,
             altgr_button,
             about_button,
-            header_box,
             current_desc: None,
         }
     }
 
-    pub fn widget(&self) -> &ViewStack {
-        &self.stack
-    }
-
-    pub fn header(&self) -> &GtkBox {
-        &self.header_box
-    }
-
-    pub fn normal_button(&self) -> &Button {
-        &self.normal_button
-    }
-
-    pub fn altgr_button(&self) -> &Button {
-        &self.altgr_button
+    /// Header + stack, ready to drop into a dialog.
+    pub fn content(&self) -> &GtkBox {
+        &self.content
     }
 
     pub fn about_button(&self) -> &Button {
@@ -108,18 +118,16 @@ impl LayoutViewer {
                 let keymap = layout.keymap();
                 self.keyboard_widget.set_keymap(keymap);
                 self.stack.set_visible_child_name("keyboard");
-                self.header_box.set_visible(true);
                 self.normal_button.set_sensitive(true);
-                let has_altgr = self.keyboard_widget_has_altgr();
+                let has_altgr = self.keyboard_widget.has_altgr();
                 self.altgr_button.set_sensitive(has_altgr);
                 self.about_button.set_sensitive(true);
-                self.keyboard_widget.set_mode(crate::keyboard::Mode::Normal);
+                self.keyboard_widget.set_mode(Mode::Normal);
                 self.normal_button.add_css_class("raised");
                 self.altgr_button.remove_css_class("raised");
             }
             LayoutKind::Phonetic | LayoutKind::Khipro => {
                 self.stack.set_visible_child_name("image");
-                self.header_box.set_visible(true);
                 self.normal_button.set_sensitive(false);
                 self.altgr_button.set_sensitive(false);
                 self.about_button.set_sensitive(true);
@@ -128,70 +136,34 @@ impl LayoutViewer {
         }
     }
 
-    fn keyboard_widget_has_altgr(&self) -> bool {
-        self.keyboard_widget.has_altgr()
-    }
-
     fn render_image(&self, image_b64: String) {
         if let Some(child) = self.image_box.first_child() {
             self.image_box.remove(&child);
         }
 
         if image_b64.is_empty() {
-            let label = Label::new(Some("No image to display!"));
-            label.set_vexpand(true);
-            label.set_hexpand(true);
-            label.set_halign(gtk::Align::Center);
-            label.set_valign(gtk::Align::Center);
-            self.image_box.append(&label);
+            self.image_box.append(&placeholder("No image to display!"));
             return;
         }
 
         let decoded = decode_image(&image_b64);
         if decoded.is_empty() {
-            let label = Label::new(Some("Failed to decode image"));
-            label.set_vexpand(true);
-            label.set_hexpand(true);
-            label.set_halign(gtk::Align::Center);
-            label.set_valign(gtk::Align::Center);
-            self.image_box.append(&label);
+            self.image_box
+                .append(&placeholder("Failed to decode image"));
             return;
         }
 
-        // Try to load as PNG via GdkPixbuf / GTexture
-        let loader = match gdk_pixbuf::PixbufLoader::new() {
-            Ok(l) => l,
-            Err(_) => {
-                let label = Label::new(Some("Failed to create image loader"));
-                label.set_vexpand(true);
-                label.set_hexpand(true);
-                label.set_halign(gtk::Align::Center);
-                label.set_valign(gtk::Align::Center);
-                self.image_box.append(&label);
-                return;
-            }
-        };
+        let loader = gdk_pixbuf::PixbufLoader::new();
         if loader.write(&decoded).is_err() {
-            let label = Label::new(Some("Failed to decode image"));
-            label.set_vexpand(true);
-            label.set_hexpand(true);
-            label.set_halign(gtk::Align::Center);
-            label.set_valign(gtk::Align::Center);
-            self.image_box.append(&label);
+            self.image_box
+                .append(&placeholder("Failed to decode image"));
             return;
         }
         loader.close().ok();
-        let pixbuf = match loader.pixbuf() {
-            Some(p) => p,
-            None => {
-                let label = Label::new(Some("Failed to decode image"));
-                label.set_vexpand(true);
-                label.set_hexpand(true);
-                label.set_halign(gtk::Align::Center);
-                label.set_valign(gtk::Align::Center);
-                self.image_box.append(&label);
-                return;
-            }
+        let Some(pixbuf) = loader.pixbuf() else {
+            self.image_box
+                .append(&placeholder("Failed to decode image"));
+            return;
         };
 
         let picture = Picture::for_pixbuf(&pixbuf);
@@ -205,8 +177,11 @@ impl LayoutViewer {
     }
 }
 
-impl Default for LayoutViewer {
-    fn default() -> Self {
-        Self::new()
-    }
+fn placeholder(text: &str) -> Label {
+    let label = Label::new(Some(text));
+    label.set_vexpand(true);
+    label.set_hexpand(true);
+    label.set_halign(gtk::Align::Center);
+    label.set_valign(gtk::Align::Center);
+    label
 }

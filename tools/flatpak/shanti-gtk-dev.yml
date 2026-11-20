@@ -34,7 +34,10 @@ modules:
       - pkg-config --exists gtk4 libadwaita-1
       - cargo fmt --check --manifest-path crates/shanti-gui/Cargo.toml
       - cargo test --locked --manifest-path crates/shanti-gui/Cargo.toml
-      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml -- -D warnings
+      - cargo clippy --locked --manifest-path crates/shanti-gui/Cargo.toml --all-targets -- -D warnings
+      - cargo fmt --check --manifest-path crates/shanti-layout/Cargo.toml
+      - cargo test --locked --manifest-path crates/shanti-layout/Cargo.toml
+      - cargo clippy --locked --manifest-path crates/shanti-layout/Cargo.toml --all-targets -- -D warnings
       - cargo fmt --check --manifest-path crates/shanti-desktop/Cargo.toml
       - cargo test --locked --manifest-path crates/shanti-desktop/Cargo.toml
       - cargo clippy --locked --manifest-path crates/shanti-desktop/Cargo.toml --all-targets -- -D warnings
@@ -44,6 +47,7 @@ modules:
       - install -m644 data/avrophonetic.json data/Avro_Easy.json data/Borno.json data/Munir_Optima.json data/National_Jatiya.json data/Probhat.json data/UniBijoy.json data/khipro.json /app/share/shanti-keyboard/layouts/
       - install -m644 src/engine/riti/data/autocorrect.json /app/share/shanti-keyboard/data/autocorrect.json
       - install -m644 data/dictionary.json data/suffix.json data/regex.json /app/share/shanti-keyboard/data/
+      - install -Dm644 data/kalpurush.ttf /app/share/fonts/kalpurush.ttf
     sources:
       - type: dir
         path: ../..

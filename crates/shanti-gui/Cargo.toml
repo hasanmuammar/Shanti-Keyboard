@@ -14,8 +14,10 @@ path = "src/main.rs"
 adw = { package = "libadwaita", version = "0.8.0" }
 gtk = { package = "gtk4", version = "0.10.1" }
 gdk-pixbuf = { package = "gdk-pixbuf", version = "0.20.0" }
+pangocairo = "0.21"
 serde_json = "1"
 shanti-paths = { path = "../shanti-paths" }
 shanti-config = { path = "../shanti-config" }
+shanti-core = { path = "../shanti-core" }
 shanti-layout = { path = "../shanti-layout" }
 shanti-desktop = { path = "../shanti-desktop" }

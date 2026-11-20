@@ -1,11 +1,10 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::auto_correct_dialog::AutoCorrectDialog;
 use adw::prelude::*;
-use adw::{
-    ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow, ToggleSwitch,
-};
-use gtk::{prelude::*, Button};
+use adw::{ActionRow, ComboRow, PreferencesGroup, PreferencesPage, PreferencesWindow};
+use gtk::{Button, StringList, Switch};
 use shanti_config::Settings;
 
 use shanti_desktop::{install_files, remove_files, Error, Paths};
@@ -14,7 +13,7 @@ use shanti_desktop::{install_files, remove_files, Error, Paths};
 /// DBus/systemd backend. It records calls so tests can assert on them.
 #[derive(Default)]
 pub struct StubService {
-    pub calls: std::cell::RefCell<Vec<String>>,
+    pub calls: RefCell<Vec<String>>,
 }
 
 impl shanti_desktop::ServiceControl for StubService {
@@ -34,67 +33,131 @@ impl shanti_desktop::ServiceControl for StubService {
     }
 }
 
+/// A preferences row with a switch. The switch starts from the stored value
+/// and writes the store on every change, which is the libadwaita convention
+/// (there is no OK/Apply button) and matches what the Qt dialog wrote on OK.
+fn add_switch(
+    group: &PreferencesGroup,
+    title: &str,
+    settings: &Rc<RefCell<Settings>>,
+    get: fn(&Settings) -> bool,
+    apply: fn(&mut Settings, bool),
+) -> Switch {
+    let row = ActionRow::new();
+    row.set_title(title);
+
+    let switch = Switch::new();
+    switch.set_active(get(&settings.borrow()));
+    switch.set_valign(gtk::Align::Center);
+    row.add_suffix(&switch);
+    group.add(&row);
+
+    let settings = Rc::clone(settings);
+    switch.connect_active_notify(move |switch| {
+        let mut settings = settings.borrow_mut();
+        apply(&mut settings, switch.is_active());
+        let _ = settings.save();
+    });
+
+    switch
+}
+
+/// A preferences row with a drop-down. `selected` is the index to preselect;
+/// `apply` receives the new index.
+fn add_combo(
+    group: &PreferencesGroup,
+    title: &str,
+    options: &[&str],
+    selected: u32,
+    settings: &Rc<RefCell<Settings>>,
+    apply: fn(&mut Settings, u32),
+) -> ComboRow {
+    let row = ComboRow::new();
+    row.set_title(title);
+    row.set_model(Some(&StringList::new(options)));
+    row.set_selected(selected);
+    group.add(&row);
+
+    let settings = Rc::clone(settings);
+    row.connect_selected_notify(move |row| {
+        let mut settings = settings.borrow_mut();
+        apply(&mut settings, row.selected());
+        let _ = settings.save();
+    });
+
+    row
+}
+
 pub struct SettingsDialog {
     pub window: PreferencesWindow,
-    settings: Rc<std::cell::RefCell<Settings>>,
-    service: Rc<StubService>,
-    status_row: ActionRow,
-    setup_button: Button,
-    remove_button: Button,
 }
 
 impl SettingsDialog {
     pub fn new() -> Self {
-        let settings = Rc::new(std::cell::RefCell::new(
-            Settings::load().unwrap_or_default(),
-        ));
-        let service = Rc::new(StubService::default());
+        let settings = Rc::new(RefCell::new(Settings::load().unwrap_or_default()));
 
         let window = PreferencesWindow::new();
-        window.set_title("Shanti Keyboard Settings");
+        window.set_title(Some("Shanti Keyboard Settings"));
         window.set_default_width(640);
         window.set_default_height(480);
 
         // ---- General page ----
         let general = PreferencesPage::new();
         general.set_title("General");
-        general.set_icon_name("preferences-system-symbolic");
+        general.set_icon_name(Some("preferences-system-symbolic"));
 
         let general_group = PreferencesGroup::new();
         general_group.set_title("General");
         general.add(&general_group);
 
-        let enter_close = ActionRow::new();
-        enter_close.set_title("Enter key closes previous window");
-        let enter_close_sw = ToggleSwitch::new();
-        enter_close_sw.set_active(settings.borrow().enter_key_closes_prev_win);
-        enter_close.add_suffix(&enter_close_sw);
-        general_group.add(&enter_close);
+        add_switch(
+            &general_group,
+            "Enter key closes previous window",
+            &settings,
+            |s| s.enter_key_closes_prev_win,
+            |s, on| s.enter_key_closes_prev_win = on,
+        );
+        add_switch(
+            &general_group,
+            "Smart quoting",
+            &settings,
+            |s| s.smart_quoting,
+            |s, on| s.smart_quoting = on,
+        );
 
-        let smart_quote = ActionRow::new();
-        smart_quote.set_title("Smart quoting");
-        let smart_quote_sw = ToggleSwitch::new();
-        smart_quote_sw.set_active(settings.borrow().smart_quoting);
-        smart_quote.add_suffix(&smart_quote_sw);
-        general_group.add(&smart_quote);
+        add_combo(
+            &general_group,
+            "Candidate window orientation",
+            &["Horizontal", "Vertical"],
+            if settings.borrow().candidate_win_horizontal {
+                0
+            } else {
+                1
+            },
+            &settings,
+            |s, index| s.candidate_win_horizontal = index == 0,
+        );
 
-        let orientation = ComboRow::new();
-        orientation.set_title("Candidate window orientation");
-        general_group.add(&orientation);
+        add_switch(
+            &general_group,
+            "Include English in candidate window",
+            &settings,
+            |s| s.suggestion_include_english,
+            |s, on| s.suggestion_include_english = on,
+        );
 
-        let include_english = ActionRow::new();
-        include_english.set_title("Include English in candidate window");
-        let include_english_sw = ToggleSwitch::new();
-        include_english_sw.set_active(settings.borrow().suggestion_include_english);
-        include_english.add_suffix(&include_english_sw);
-        general_group.add(&include_english);
-
-        let ansi = ActionRow::new();
-        ansi.set_title("ANSI encoding");
-        let ansi_sw = ToggleSwitch::new();
-        ansi_sw.set_active(settings.borrow().ansi_encoding);
-        ansi.add_suffix(&ansi_sw);
-        general_group.add(&ansi);
+        add_combo(
+            &general_group,
+            "Encoding",
+            &["Unicode", "ANSI"],
+            if settings.borrow().ansi_encoding {
+                1
+            } else {
+                0
+            },
+            &settings,
+            |s, index| s.ansi_encoding = index == 1,
+        );
 
         // ---- Phonetic page ----
         let phonetic = PreferencesPage::new();
@@ -105,12 +168,13 @@ impl SettingsDialog {
         phonetic_group.set_title("Phonetic keyboard layout");
         phonetic.add(&phonetic_group);
 
-        let show_cw = ActionRow::new();
-        show_cw.set_title("Show candidate window");
-        let show_cw_sw = ToggleSwitch::new();
-        show_cw_sw.set_active(settings.borrow().show_cw_phonetic);
-        show_cw.add_suffix(&show_cw_sw);
-        phonetic_group.add(&show_cw);
+        add_switch(
+            &phonetic_group,
+            "Show candidate window",
+            &settings,
+            |s| s.show_cw_phonetic,
+            |s, on| s.show_cw_phonetic = on,
+        );
 
         let autocorrect_btn = Button::with_label("Manage AutoCorrect entries");
         autocorrect_btn.set_hexpand(true);
@@ -130,51 +194,61 @@ impl SettingsDialog {
         fixed_group.set_title("Fixed keyboard layout");
         fixed.add(&fixed_group);
 
-        let show_prev = ActionRow::new();
-        show_prev.set_title("Show previous window");
-        let show_prev_sw = ToggleSwitch::new();
-        show_prev_sw.set_active(settings.borrow().show_prev_win_fixed);
-        show_prev.add_suffix(&show_prev_sw);
-        fixed_group.add(&show_prev);
+        add_switch(
+            &fixed_group,
+            "Show previous window",
+            &settings,
+            |s| s.show_prev_win_fixed,
+            |s, on| s.show_prev_win_fixed = on,
+        );
+        add_switch(
+            &fixed_group,
+            "Auto vowel form",
+            &settings,
+            |s| s.auto_vowel_form_fixed,
+            |s, on| s.auto_vowel_form_fixed = on,
+        );
+        add_switch(
+            &fixed_group,
+            "Auto chandra position",
+            &settings,
+            |s| s.auto_chandra_pos_fixed,
+            |s, on| s.auto_chandra_pos_fixed = on,
+        );
+        add_switch(
+            &fixed_group,
+            "Old reph",
+            &settings,
+            |s| s.old_reph,
+            |s, on| s.old_reph = on,
+        );
+        add_switch(
+            &fixed_group,
+            "Traditional kar joining",
+            &settings,
+            |s| s.traditional_kar_fixed,
+            |s, on| s.traditional_kar_fixed = on,
+        );
+        add_switch(
+            &fixed_group,
+            "Number pad",
+            &settings,
+            |s| s.number_pad_fixed,
+            |s, on| s.number_pad_fixed = on,
+        );
 
-        let auto_vowel = ActionRow::new();
-        auto_vowel.set_title("Auto vowel form");
-        let auto_vowel_sw = ToggleSwitch::new();
-        auto_vowel_sw.set_active(settings.borrow().auto_vowel_form_fixed);
-        auto_vowel.add_suffix(&auto_vowel_sw);
-        fixed_group.add(&auto_vowel);
-
-        let auto_chandra = ActionRow::new();
-        auto_chandra.set_title("Auto chandra position");
-        let auto_chandra_sw = ToggleSwitch::new();
-        auto_chandra_sw.set_active(settings.borrow().auto_chandra_pos_fixed);
-        auto_chandra.add_suffix(&auto_chandra_sw);
-        fixed_group.add(&auto_chandra);
-
-        let old_reph = ActionRow::new();
-        old_reph.set_title("Old reph");
-        let old_reph_sw = ToggleSwitch::new();
-        old_reph_sw.set_active(settings.borrow().old_reph);
-        old_reph.add_suffix(&old_reph_sw);
-        fixed_group.add(&old_reph);
-
-        let kar_joining = ActionRow::new();
-        kar_joining.set_title("Traditional kar joining");
-        let kar_joining_sw = ToggleSwitch::new();
-        kar_joining_sw.set_active(settings.borrow().traditional_kar_fixed);
-        kar_joining.add_suffix(&kar_joining_sw);
-        fixed_group.add(&kar_joining);
-
-        let number_pad = ActionRow::new();
-        number_pad.set_title("Number pad");
-        let number_pad_sw = ToggleSwitch::new();
-        number_pad_sw.set_active(settings.borrow().number_pad_fixed);
-        number_pad.add_suffix(&number_pad_sw);
-        fixed_group.add(&number_pad);
-
-        let old_kar_order = ComboRow::new();
-        old_kar_order.set_title("Kar order");
-        fixed_group.add(&old_kar_order);
+        add_combo(
+            &fixed_group,
+            "Kar order",
+            &["Modern", "Old"],
+            if settings.borrow().fixed_old_kar_order {
+                1
+            } else {
+                0
+            },
+            &settings,
+            |s, index| s.fixed_old_kar_order = index == 1,
+        );
 
         // ---- GNOME IBus Integration panel ----
         let ibus = PreferencesPage::new();
@@ -185,9 +259,12 @@ impl SettingsDialog {
         ibus_group.set_title("Integration");
         ibus.add(&ibus_group);
 
+        let desktop = crate::platform_config::desktop_environment_to_string(
+            crate::platform_config::detect_desktop_environment(),
+        );
         let status_row = ActionRow::new();
         status_row.set_title("Integration status");
-        status_row.set_subtitle("Not installed");
+        status_row.set_subtitle(&format!("{desktop} · Not installed"));
         ibus_group.add(&status_row);
 
         let setup_button = Button::with_label("Set up / repair");
@@ -205,49 +282,28 @@ impl SettingsDialog {
         window.add(&fixed);
         window.add(&ibus);
 
-        // Wire up IBus integration buttons
-        let settings_c = Rc::clone(&settings);
-        let service_c = Rc::clone(&service);
+        // Wire up IBus integration buttons. Both actions only touch files here;
+        // the systemd/DBus half belongs to the concrete ServiceControl backend.
+        let service = Rc::new(StubService::default());
         let status_row_c = status_row.clone();
         let setup_button_c = setup_button.clone();
         let remove_button_c = remove_button.clone();
+        let service_c = Rc::clone(&service);
         setup_button.connect_clicked(move |_| {
-            Self::do_setup(
-                &settings_c,
-                &service_c,
-                &status_row_c,
-                &setup_button_c,
-                &remove_button_c,
-            );
+            Self::do_setup(&service_c, &status_row_c, &setup_button_c, &remove_button_c);
         });
 
-        let settings_c2 = Rc::clone(&settings);
-        let service_c2 = Rc::clone(&service);
         let status_row_c2 = status_row.clone();
         let setup_button_c2 = setup_button.clone();
         let remove_button_c2 = remove_button.clone();
         remove_button.connect_clicked(move |_| {
-            Self::do_remove(
-                &settings_c2,
-                &service_c2,
-                &status_row_c2,
-                &setup_button_c2,
-                &remove_button_c2,
-            );
+            Self::do_remove(&status_row_c2, &setup_button_c2, &remove_button_c2);
         });
 
-        Self {
-            window,
-            settings,
-            service,
-            status_row,
-            setup_button,
-            remove_button,
-        }
+        Self { window }
     }
 
     fn do_setup(
-        _settings: &Rc<std::cell::RefCell<Settings>>,
         service: &Rc<StubService>,
         status_row: &ActionRow,
         setup_button: &Button,
@@ -281,13 +337,7 @@ impl SettingsDialog {
         service.calls.borrow_mut().push("setup".to_string());
     }
 
-    fn do_remove(
-        settings: &Rc<std::cell::RefCell<Settings>>,
-        service: &Rc<StubService>,
-        status_row: &ActionRow,
-        setup_button: &Button,
-        remove_button: &Button,
-    ) {
+    fn do_remove(status_row: &ActionRow, setup_button: &Button, remove_button: &Button) {
         let paths = match Paths::from_env() {
             Ok(p) => p,
             Err(_) => {
@@ -306,7 +356,6 @@ impl SettingsDialog {
                 status_row.set_subtitle(&format!("Error: {}", e));
             }
         }
-        service.calls.borrow_mut().push("remove".to_string());
     }
 
     pub fn window(&self) -> &PreferencesWindow {
