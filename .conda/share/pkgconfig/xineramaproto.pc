@@ -1,7 +1,0 @@
-prefix=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b
-includedir=${prefix}/include
-
-Name: XineramaProto
-Description: Xinerama extension headers
-Version: 1.2.1
-Cflags: -I${includedir}

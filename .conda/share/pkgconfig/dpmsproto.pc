@@ -1,7 +1,0 @@
-prefix=/home/hasan/Projects/Shanti/OpenBangla-Keyboard-Shanti/b5bf2e54cb654f7b
-includedir=${prefix}/include
-
-Name: DPMSProto
-Description: DPMS extension headers
-Version: 1.2
-Cflags: -I${includedir}
