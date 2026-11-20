@@ -16,20 +16,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(cmake/corrosion-rs)
-# Qt5 is only needed by the settings GUI (src/frontend + src/shared); the
-# IBus engine is Qt-free since rewrite phase 2.
-option(BUILD_FRONTEND "Build the Qt5 settings GUI" ON)
-if(BUILD_FRONTEND)
-    find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
-endif()
+# The IBus engine is Qt-free; the GTK4/libadwaita GUI is built as the separate
+# Rust `shanti-gui` crate and installed by the Flatpak manifest as `shanti-gui`.
+# The legacy Qt5 settings GUI (src/frontend + src/shared) is retired.
 
 # Rust crates used by the IBus engine (shanti-config, shanti-paths); imported
 # as CMake targets so the engine can link them directly.
 add_subdirectory(crates)
 
-# Build the Rust migration shell alongside the existing Qt GUI when requested.
-# Keep it under a distinct name until its GTK interface is ready for the
-# production shanti-gui launcher.
 option(BUILD_RUST_GUI_SHELL "Build the Rust GUI migration shell" OFF)
 if(BUILD_RUST_GUI_SHELL)
     find_program(CARGO_EXECUTABLE cargo REQUIRED)
@@ -53,10 +47,6 @@ if(BUILD_RUST_GUI_SHELL)
     )
     add_custom_target(shanti-gui-rust ALL DEPENDS "${RUST_GUI_BINARY}")
     install(PROGRAMS "${RUST_GUI_BINARY}" DESTINATION "${BIN_DIR}")
-endif()
-
-if(BUILD_FRONTEND)
-    message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -100,7 +90,3 @@ pkg_check_modules(IBUS REQUIRED ibus-1.0)
 
 add_subdirectory(src/engine)
 add_subdirectory(src/platform)
-if(BUILD_FRONTEND)
-    add_subdirectory(src/shared)
-    add_subdirectory(src/frontend)
-endif()

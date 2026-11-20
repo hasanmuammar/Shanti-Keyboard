@@ -65,11 +65,11 @@ jobs:
 
           metadata="$(flatpak info --user --show-metadata org.shanti.ShantiIbus)"
           grep -Fq 'name=org.shanti.ShantiIbus' <<<"$metadata"
-          grep -Fq 'runtime=org.kde.Platform/' <<<"$metadata"
+          grep -Fq 'runtime=org.gnome.Platform/' <<<"$metadata"
 
-          flatpak run --user --env=QT_QPA_PLATFORM=offscreen \
+          flatpak run --user --env=GTK_A11Y=none \
             org.shanti.ShantiIbus --version
-          flatpak run --user --env=QT_QPA_PLATFORM=offscreen \
+          flatpak run --user --env=GTK_A11Y=none \
             org.shanti.ShantiIbus --check-data
 
       - name: Upload Flatpak bundle

@@ -203,8 +203,8 @@ jobs:
           grep -Fq '<icon>@OBK_DATA_HOME@/shanti-keyboard/icons/Shanti-Keyboard.png</icon>' "$work/share/ibus/component/shanti.xml"
           ! grep -Fq '/home/runner/' "$work/share/ibus/component/shanti.xml"
 
-          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --version
-          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --check-data
+          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" GTK_A11Y=none "$work/bin/shanti-gui" --version
+          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" GTK_A11Y=none "$work/bin/shanti-gui" --check-data
 
           # Simulate installation with a non-default absolute XDG_DATA_HOME.
           install_prefix="$install_home/.local"
@@ -246,7 +246,7 @@ jobs:
             grep -Fq "Exec=\"$OBK_PREFIX/bin/shanti-gui\" %f" \
               "$OBK_DATA_HOME/applications/shanti-keyboard.desktop"
 
-            QT_QPA_PLATFORM=offscreen "$OBK_PREFIX/bin/shanti-gui" --check-data
+            GTK_A11Y=none "$OBK_PREFIX/bin/shanti-gui" --check-data
 
             grep -Fq "<exec>\"$OBK_PREFIX/libexec/ibus-engine-shanti\" --ibus</exec>" \
               "$OBK_DATA_HOME/ibus/component/shanti.xml"
