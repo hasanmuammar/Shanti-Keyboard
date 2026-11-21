@@ -187,6 +187,7 @@ fn run() -> ExitCode {
             .default_height(360)
             .content(&content)
             .build();
+        window.set_hide_on_close(true);
 
         // Floating top bar (GTK port of Qt TopBar): frameless, always on top,
         // draggable, with layout/settings/view-layout/quit actions.
@@ -195,6 +196,7 @@ fn run() -> ExitCode {
         let layout_path = root.join("layouts/avrophonetic.json");
 
         let layout_text = std::fs::read_to_string(&layout_path).ok();
+        let layout_text_viewer = layout_text.clone();
 
         top_bar.view_btn.connect_clicked(move |_| {
             let dialog = adw::Window::builder()
@@ -204,7 +206,7 @@ fn run() -> ExitCode {
                 .default_height(500)
                 .build();
             let mut viewer = layout_viewer::LayoutViewer::new();
-            if let Some(ref text) = layout_text {
+            if let Some(ref text) = layout_text_viewer {
                 viewer.set_layout(text);
             }
             let viewer_c = viewer.clone();
@@ -224,6 +226,27 @@ fn run() -> ExitCode {
 
         top_bar.shutdown_btn.connect_clicked(move |_| {
             application.quit();
+        });
+
+        top_bar.layout_btn.connect_clicked(move |_| {
+            let dialog = adw::Window::builder()
+                .title("Keyboard Layout Viewer")
+                .modal(true)
+                .default_width(700)
+                .default_height(500)
+                .build();
+            let mut viewer = layout_viewer::LayoutViewer::new();
+            if let Some(ref text) = layout_text {
+                viewer.set_layout(text);
+            }
+            let viewer_c = viewer.clone();
+            viewer.about_button().connect_clicked(move |_| {
+                if let Some(desc) = viewer_c.desc() {
+                    about_file::AboutFile::new(desc);
+                }
+            });
+            dialog.set_content(Some(&viewer.content().clone()));
+            dialog.present();
         });
 
         top_bar.present();

@@ -5,7 +5,6 @@ use gtk::{Box as GtkBox, Button, GestureClick, Window};
 pub struct TopBar {
     pub window: Window,
     pub icon_btn: Button,
-    #[allow(dead_code)]
     pub layout_btn: Button,
     pub view_btn: Button,
     pub settings_btn: Button,
@@ -20,6 +19,7 @@ impl TopBar {
             .default_width(220)
             .default_height(44)
             .build();
+        window.set_hide_on_close(true);
 
         let content = GtkBox::new(gtk::Orientation::Horizontal, 6);
         content.set_margin_top(6);
@@ -27,21 +27,26 @@ impl TopBar {
         content.set_margin_start(6);
         content.set_margin_end(6);
 
-        let icon_btn = Button::with_label("Shanti");
+        let icon_btn = Button::from_icon_name("org.shanti.ShantiIbus");
         icon_btn.add_css_class("pill");
+        icon_btn.set_tooltip_text(Some("About Shanti Keyboard"));
 
-        let layout_btn = Button::with_label("Layout");
+        let layout_btn = Button::from_icon_name("input-keyboard");
         layout_btn.add_css_class("pill");
+        layout_btn.set_tooltip_text(Some("Keyboard Layout"));
 
-        let view_btn = Button::with_label("View Layout");
+        let view_btn = Button::from_icon_name("accessories-text-editor");
         view_btn.add_css_class("pill");
+        view_btn.set_tooltip_text(Some("View Layout"));
 
-        let settings_btn = Button::with_label("Settings");
+        let settings_btn = Button::from_icon_name("preferences-system");
         settings_btn.add_css_class("pill");
+        settings_btn.set_tooltip_text(Some("Settings"));
 
-        let shutdown_btn = Button::with_label("Quit");
+        let shutdown_btn = Button::from_icon_name("system-shutdown");
         shutdown_btn.add_css_class("pill");
         shutdown_btn.add_css_class("destructive-action");
+        shutdown_btn.set_tooltip_text(Some("Quit"));
 
         content.append(&icon_btn);
         content.append(&layout_btn);
