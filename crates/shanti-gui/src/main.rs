@@ -110,7 +110,7 @@ fn run() -> ExitCode {
     }
 
     let application = Application::builder()
-        .application_id("org.shanti.ShantiGtkDev")
+        .application_id("org.shanti.ShantiIbus")
         .build();
     application.connect_activate(|application| {
         // First-run legacy migration and user-dir bootstrap, then the typed
