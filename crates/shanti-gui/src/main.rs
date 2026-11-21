@@ -249,11 +249,12 @@ fn run() -> ExitCode {
             dialog.present();
         });
 
-        top_bar.present();
         top_bar.icon_btn.connect_clicked(move |_| {
             let dialog = about_dialog::AboutDialog::new();
             dialog.window.present();
         });
+
+        top_bar.present();
 
         window.present();
     });

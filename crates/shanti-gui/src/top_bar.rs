@@ -20,6 +20,7 @@ impl TopBar {
             .default_height(44)
             .build();
         window.set_hide_on_close(true);
+        window.set_property("keep-above", true);
 
         let content = GtkBox::new(gtk::Orientation::Horizontal, 6);
         content.set_margin_top(6);
